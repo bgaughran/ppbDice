@@ -184,8 +184,7 @@ contract usingOraclize {
             return 0;
    }
 
-    function indexOf(string _haystack, string _needle) internal returns (int)
-    {
+    function indexOf(string _haystack, string _needle) internal returns (int){
         bytes memory h = bytes(_haystack);
         bytes memory n = bytes(_needle);
         if(h.length < 1 || n.length < 1 || (n.length > h.length))
@@ -364,33 +363,8 @@ contract Dice is usingOraclize {
         _
     }
 
-    modifier onlyIfStopped {
-        if (!isStopped) throw;
-        _
-    }
-
-    modifier onlyInvestors {
-        if (investorIDs[msg.sender] == 0) throw;
-        _
-    }
-
-    modifier onlyNotInvestors {
-        if (investorIDs[msg.sender] != 0) throw;
-        _
-    }
-
-    modifier onlyOwner {
-        if (owner != msg.sender) throw;
-        _
-    }
-
     modifier onlyOraclize {
         if (msg.sender != oraclize_cbAddress()) throw;
-        _
-    }
-
-    modifier onlyMoreThanMinInvestment {
-        if (msg.value <= getMinInvestment()) throw;
         _
     }
 
@@ -398,80 +372,6 @@ contract Dice is usingOraclize {
         if (msg.value == 0) throw;
         _
     }
-
-    modifier onlyIfBetSizeIsStillCorrect(bytes32 myid) {
-        Bet thisBet = bets[myid];
-        if ((((thisBet.amountBetted * ((10000 - edge) - pwin)) / pwin ) <= (maxWin * getBankroll()) / 10000)) {
-             _
-        }
-        else {
-            bets[myid].numberRolled = INVALID_BET_MARKER;
-            safeSend(thisBet.playerAddress, thisBet.amountBetted);
-            return;
-        }
-    }
-
-    modifier onlyIfValidRoll(bytes32 myid, string result) {
-        Bet thisBet = bets[myid];
-        uint numberRolled = parseInt(result);
-        if ((numberRolled < 1 || numberRolled > 10000) && thisBet.numberRolled == 0) {
-            bets[myid].numberRolled = INVALID_BET_MARKER;
-            safeSend(thisBet.playerAddress, thisBet.amountBetted);
-            return;
-        }
-        _
-    }
-
-    modifier onlyIfInvestorBalanceIsPositive(address currentInvestor) {
-        if (getBalance(currentInvestor) >= 0) {
-            _
-        }
-    }
-
-    modifier onlyWinningBets(uint numberRolled) {
-        if (numberRolled - 1 < pwin) {
-            _
-        }
-    }
-
-    modifier onlyLosingBets(uint numberRolled) {
-        if (numberRolled - 1 >= pwin) {
-            _
-        }
-    }
-
-    modifier onlyAfterProposed {
-        if (proposedWithdrawal.toAddress == 0) throw;
-        _
-    }
-
-    modifier rejectValue {
-        if (msg.value != 0) throw;
-        _
-    }
-
-    modifier onlyIfProfitNotDistributed {
-        if (!profitDistributed) {
-            _
-        }
-    }
-
-    modifier onlyIfValidGas(uint newGasLimit) {
-        if (newGasLimit < 25000) throw;
-        _
-    }
-
-    modifier onlyIfNotProcessed(bytes32 myid) {
-        Bet thisBet = bets[myid];
-        if (thisBet.numberRolled > 0) throw;
-        _
-    }
-
-    modifier onlyIfEmergencyTimeOutHasPassed {
-        if (proposedWithdrawal.atTime + EMERGENCY_TIMEOUT > now) throw;
-        _
-    }
-
 
     //CONSTANT HELPER FUNCTIONS
 
@@ -487,37 +387,6 @@ contract Dice is usingOraclize {
         else {
             return 0;
         }
-    }
-
-    function getStatus() constant returns(uint, uint, uint, uint, uint, uint, uint, uint, uint) {
-
-        uint bankroll = getBankroll();
-
-        uint minInvestment = getMinInvestment();
-
-        return (bankroll, pwin, edge, maxWin, minBet, amountWagered, (investorsProfit - investorsLoses), minInvestment, betsKeys.length);
-    }
-
-    function getBet(uint id) constant returns(address, uint, uint) {
-        if (id < betsKeys.length) {
-            bytes32 betKey = betsKeys[id];
-            return (bets[betKey].playerAddress, bets[betKey].amountBetted, bets[betKey].numberRolled);
-        }
-    }
-
-    function numBets() constant returns(uint) {
-        return betsKeys.length;
-    }
-
-    function getMinBetAmount() constant returns(uint) {
-        uint oraclizeFee = OraclizeI(OAR.getAddress()).getPrice("URL", ORACLIZE_GAS_LIMIT + safeGas);
-        return oraclizeFee + minBet;
-    }
-
-    function getMaxBetAmount() constant returns(uint) {
-        uint oraclizeFee = OraclizeI(OAR.getAddress()).getPrice("URL", ORACLIZE_GAS_LIMIT + safeGas);
-        uint betValue =  (maxWin * getBankroll()) * pwin / (10000 * (10000 - edge - pwin));
-        return betValue + oraclizeFee;
     }
 
     function getLosesShare(address currentInvestor) constant returns (uint) {
@@ -558,31 +427,6 @@ contract Dice is usingOraclize {
                 if (!(houseAddress.call.gas(safeGas).value(value)())) FailedSend(houseAddress, value);
             }
         }
-    }
-
-    function addInvestorAtID(uint id) private {
-        investorIDs[msg.sender] = id;
-        investors[id].investorAddress = msg.sender;
-        investors[id].amountInvested = msg.value;
-        invested += msg.value;
-    }
-
-    function profitDistribution() private onlyIfProfitNotDistributed {
-        uint copyInvested;
-
-        for (uint i = 1; i <= numInvestors; i++) {
-            address currentInvestor = investors[i].investorAddress;
-            uint profitOfInvestor = getProfitShare(currentInvestor);
-            uint losesOfInvestor = getLosesShare(currentInvestor);
-            investors[i].amountInvested += profitOfInvestor - losesOfInvestor;
-            copyInvested += investors[i].amountInvested;
-        }
-
-        delete investorsProfit;
-        delete investorsLoses;
-        invested = copyInvested;
-
-        profitDistributed = true;
     }
 
     // SECTION II: BET & BET PROCESSING
@@ -635,168 +479,5 @@ contract Dice is usingOraclize {
         safeSend(houseAddress, houseProfit);
     }
 
-    //SECTION III: INVEST & DIVEST
-
-    function increaseInvestment() onlyIfNotStopped onlyMoreThanZero onlyInvestors  {
-        profitDistribution();
-        investors[investorIDs[msg.sender]].amountInvested += msg.value;
-        invested += msg.value;
-    }
-
-    function newInvestor()
-        onlyIfNotStopped
-        onlyMoreThanZero
-        onlyNotInvestors
-        onlyMoreThanMinInvestment {
-
-        profitDistribution();
-
-        if (numInvestors == maxInvestors) {
-            uint smallestInvestorID = searchSmallestInvestor();
-            divest(investors[smallestInvestorID].investorAddress);
-        }
-
-        numInvestors++;
-        addInvestorAtID(numInvestors);
-    }
-
-    function divest() onlyInvestors rejectValue {
-        divest(msg.sender);
-    }
-
-
-    function divest(address currentInvestor)
-        private
-        onlyIfInvestorBalanceIsPositive(currentInvestor) {
-
-        profitDistribution();
-        uint currentID = investorIDs[currentInvestor];
-        uint amountToReturn = getBalance(currentInvestor);
-        invested -= investors[currentID].amountInvested;
-        uint divestFeeAmount =  (amountToReturn*divestFee)/10000;
-        amountToReturn -= divestFeeAmount;
-
-        delete investors[currentID];
-        delete investorIDs[currentInvestor];
-        //Reorder investors
-
-        if (currentID != numInvestors) {
-            // Get last investor
-            Investor lastInvestor = investors[numInvestors];
-            //Set last investor ID to investorID of divesting account
-            investorIDs[lastInvestor.investorAddress] = currentID;
-            //Copy investor at the new position in the mapping
-            investors[currentID] = lastInvestor;
-            //Delete old position in the mappping
-            delete investors[numInvestors];
-        }
-
-        numInvestors--;
-        safeSend(currentInvestor, amountToReturn);
-        safeSend(houseAddress, divestFeeAmount);
-    }
-
-    function forceDivestOfAllInvestors() onlyOwner rejectValue {
-        uint copyNumInvestors = numInvestors;
-        for (uint i = 1; i <= copyNumInvestors; i++) {
-            divest(investors[1].investorAddress);
-        }
-    }
-
-    /*
-    The owner can use this function to force the exit of an investor from the
-    contract during an emergency withdrawal in the following situations:
-        - Unresponsive investor
-        - Investor demanding to be paid in other to vote, the facto-blackmailing
-        other investors
-    */
-    function forceDivestOfOneInvestor(address currentInvestor)
-        onlyOwner
-        onlyIfStopped
-        rejectValue {
-
-        divest(currentInvestor);
-        //Resets emergency withdrawal proposal. Investors must vote again
-        delete proposedWithdrawal;
-    }
-
-    //SECTION IV: CONTRACT MANAGEMENT
-
-    function stopContract() onlyOwner rejectValue {
-        isStopped = true;
-    }
-
-    function resumeContract() onlyOwner rejectValue {
-        isStopped = false;
-    }
-
-    function changeHouseAddress(address newHouse) onlyOwner rejectValue {
-        houseAddress = newHouse;
-    }
-
-    function changeOwnerAddress(address newOwner) onlyOwner rejectValue {
-        owner = newOwner;
-    }
-
-    function changeGasLimitOfSafeSend(uint newGasLimit)
-        onlyOwner
-        onlyIfValidGas(newGasLimit)
-        rejectValue {
-        safeGas = newGasLimit;
-    }
-
-    //SECTION V: EMERGENCY WITHDRAWAL
-
-    function voteEmergencyWithdrawal(bool vote)
-        onlyInvestors
-        onlyAfterProposed
-        onlyIfStopped
-        rejectValue {
-        investors[investorIDs[msg.sender]].votedForEmergencyWithdrawal = vote;
-    }
-
-    function proposeEmergencyWithdrawal(address withdrawalAddress)
-        onlyIfStopped
-        onlyOwner
-        rejectValue {
-
-        //Resets previous votes
-        for (uint i = 1; i <= numInvestors; i++) {
-            delete investors[i].votedForEmergencyWithdrawal;
-        }
-
-        proposedWithdrawal = WithdrawalProposal(withdrawalAddress, now);
-        EmergencyWithdrawalProposed();
-    }
-
-    function executeEmergencyWithdrawal()
-        onlyOwner
-        onlyAfterProposed
-        onlyIfStopped
-        onlyIfEmergencyTimeOutHasPassed
-        rejectValue {
-
-        uint numOfVotesInFavour;
-        uint amountToWithdrawal = this.balance;
-
-        for (uint i = 1; i <= numInvestors; i++) {
-            if (investors[i].votedForEmergencyWithdrawal == true) {
-                numOfVotesInFavour++;
-                delete investors[i].votedForEmergencyWithdrawal;
-            }
-        }
-
-        if (numOfVotesInFavour >= emergencyWithdrawalRatio * numInvestors / 100) {
-            if (!proposedWithdrawal.toAddress.send(this.balance)) {
-                EmergencyWithdrawalFailed(proposedWithdrawal.toAddress);
-            }
-            else {
-                EmergencyWithdrawalSucceeded(proposedWithdrawal.toAddress, amountToWithdrawal);
-            }
-        }
-        else {
-            throw;
-        }
-    }
 
 }
