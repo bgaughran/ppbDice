@@ -66,12 +66,12 @@ contract usingOraclize {
             oraclizeAddr = OAR.getAddress();
         }
         oraclize = OraclizeI(oraclizeAddr);
-        _
+        _;
     }
     modifier coupon(string code){
         oraclize = OraclizeI(OAR.getAddress());
         oraclize.useCoupon(code);
-        _
+        _;
     }
 
     function oraclize_setNetwork(uint8 networkID) internal returns(bool){
@@ -360,17 +360,17 @@ contract Dice is usingOraclize {
 
     modifier onlyIfNotStopped {
         if (isStopped) throw;
-        _
+        _;
     }
 
     modifier onlyOraclize {
         if (msg.sender != oraclize_cbAddress()) throw;
-        _
+        _;
     }
 
     modifier onlyMoreThanZero {
         if (msg.value == 0) throw;
-        _
+        _;
     }
 
     //CONSTANT HELPER FUNCTIONS
