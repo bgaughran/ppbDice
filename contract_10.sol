@@ -373,6 +373,48 @@ contract Dice is usingOraclize {
         _;
     }
 
+    modifier onlyIfNotProcessed(bytes32 myid) {
+        Bet thisBet = bets[myid];
+        if (thisBet.numberRolled > 0) throw;
+        _;
+    }
+
+    modifier onlyIfValidRoll(bytes32 myid, string result) {
+        Bet thisBet = bets[myid];
+        uint numberRolled = parseInt(result);
+        if ((numberRolled < 1 || numberRolled > 10000) && thisBet.numberRolled == 0) {
+            bets[myid].numberRolled = INVALID_BET_MARKER;
+            safeSend(thisBet.playerAddress, thisBet.amountBetted);
+            return;
+        }
+        _;
+    }
+
+
+    modifier onlyIfBetSizeIsStillCorrect(bytes32 myid) {
+        Bet thisBet = bets[myid];
+        if ((((thisBet.amountBetted * ((10000 - edge) - pwin)) / pwin ) <= (maxWin * getBankroll()) / 10000)) {
+            _;
+        }
+        else {
+            bets[myid].numberRolled = INVALID_BET_MARKER;
+            safeSend(thisBet.playerAddress, thisBet.amountBetted);
+            return;
+        }
+    }
+
+    modifier onlyWinningBets(uint numberRolled) {
+        if (numberRolled - 1 < pwin) {
+            _;
+        }
+    }
+
+    modifier onlyLosingBets(uint numberRolled) {
+        if (numberRolled - 1 >= pwin) {
+            _;
+        }
+    }
+
     //CONSTANT HELPER FUNCTIONS
 
     function getBankroll() constant returns(uint) {
