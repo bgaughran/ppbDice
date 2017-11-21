@@ -1,5 +1,5 @@
 pragma solidity ^0.4.17;
-import "./oraclizeAPI_0.4.sol";
+import "./usingOraclize.sol";
 
 contract Dice is usingOraclize {
 
