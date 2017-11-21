@@ -24,6 +24,7 @@ module.exports = function(deployer) {
 //  var minBetInWei = web3.toWei(minBet, "finney");
 
   deployer.deploy(Dice, pwin, edge, maxWin, minBet, maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio);
+//  deployer.deploy(Dice, pwin, edge, maxWin, minBet, maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio, {gas: 6000000});
 
 //    deployer.deploy(VDice, pwin, edge, minBetInWei, maxWin, minBet,
 //    maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio, {gas: 6000000});
