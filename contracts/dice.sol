@@ -73,6 +73,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
+        OAR = OraclizeAddrResolverI(0xDd506A9a6F420d27875dEa56B0830c3F01904ff9);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;

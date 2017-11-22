@@ -1,4 +1,4 @@
-var Dice = artifacts.require("Dice");
+var Dice = artifacts.require("./Dice");
 
 //var OraclizeI = artifacts.require("OraclizeI");
 //var OraclizeAddrResolverI = artifacts.require("OraclizeAddrResolverI");
@@ -21,10 +21,11 @@ module.exports = function(deployer) {
   var emergencyWithdrawalRatio = 90; //ratio percentage (100 = 100%)
 
   // Convert min bet from finneys to weis
-//  var minBetInWei = web3.toWei(minBet, "finney");
+  var minBetInWei = web3.toWei(minBet, "finney");
 
-  deployer.deploy(Dice, pwin, edge, maxWin, minBet, maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio);
-//  deployer.deploy(Dice, pwin, edge, maxWin, minBet, maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio, {gas: 6000000});
+//  deployer.deploy(Dice, pwin, edge, maxWin, minBet, maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio);
+  deployer.deploy(Dice, pwin, edge, maxWin, minBetInWei,
+    maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio, {gas: 6000000});
 
 //    deployer.deploy(VDice, pwin, edge, minBetInWei, maxWin, minBet,
 //    maxInvestors, houseEdge, divestFee, emergencyWithdrawalRatio, {gas: 6000000});
