@@ -63,6 +63,8 @@ contract Dice is usingOraclize {
     event FailedSend(address receiver, uint amount);
     event ValueIsTooBig();
 
+    //BG - This is the constructor whose code is
+    //BG - run only when the contract is created.
     function Dice(uint pwinInitial,
                   uint edgeInitial,
                   uint maxWinInitial,
