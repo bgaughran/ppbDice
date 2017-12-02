@@ -28,4 +28,22 @@ contract TestDice {
         Assert.equal(divestFeeExpected, dice.divestFee(), "divestFee is incorrect");
         Assert.equal(emergencyWithdrawalRatioExpected, dice.emergencyWithdrawalRatio(), "emergencyWithdrawalRatio is incorrect");
     }
+
+    function testBet() {
+        uint  value = 1 ether;
+        address from;
+        address to;
+
+        Dice dice = Dice(DeployedAddresses.Dice());
+//        dice.call({ from: from, to: to, value: value, gas: 180000 });
+        dice.call();
+//        dice.call(from, to, value, 180000 );
+
+//        need this to debug
+//        console.log(dice);
+
+//        from view-source:https://www.vdice.io/Scripts/vdice.js
+//        web3.eth.sendTransaction({ from: from, to: to, value: value, gas: 180000 }, function (err, address) {
+//    }
+    }
 }
