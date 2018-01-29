@@ -315,10 +315,10 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "//cloned from https://github.com/oraclize/ethereum-api/blob/master/oraclizeAPI_0.4.sol\n\n// <ORACLIZE_API>\n/*\nCopyright (c) 2015-2016 Oraclize SRL\nCopyright (c) 2016 Oraclize LTD\n\n\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\n\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n*/\n\npragma solidity ^0.4.0;//please import oraclizeAPI_pre0.4.sol when solidity < 0.4.0\n\ncontract OraclizeI {\n    address public cbAddress;\n    function query(uint _timestamp, string _datasource, string _arg) payable returns (bytes32 _id);\n    function query_withGasLimit(uint _timestamp, string _datasource, string _arg, uint _gaslimit) payable returns (bytes32 _id);\n    function query2(uint _timestamp, string _datasource, string _arg1, string _arg2) payable returns (bytes32 _id);\n    function query2_withGasLimit(uint _timestamp, string _datasource, string _arg1, string _arg2, uint _gaslimit) payable returns (bytes32 _id);\n    function queryN(uint _timestamp, string _datasource, bytes _argN) payable returns (bytes32 _id);\n    function queryN_withGasLimit(uint _timestamp, string _datasource, bytes _argN, uint _gaslimit) payable returns (bytes32 _id);\n    function getPrice(string _datasource) returns (uint _dsprice);\n    function getPrice(string _datasource, uint gaslimit) returns (uint _dsprice);\n    function useCoupon(string _coupon);\n    function setProofType(byte _proofType);\n    function setConfig(bytes32 _config);\n    function setCustomGasPrice(uint _gasPrice);\n    function randomDS_getSessionPubKeyHash() returns(bytes32);\n}\ncontract OraclizeAddrResolverI {\n    function getAddress() returns (address _addr);\n}\ncontract usingOraclize {\n    uint constant day = 60*60*24;\n    uint constant week = 60*60*24*7;\n    uint constant month = 60*60*24*30;\n    byte constant proofType_NONE = 0x00;\n    byte constant proofType_TLSNotary = 0x10;\n    byte constant proofType_Android = 0x20;\n    byte constant proofType_Ledger = 0x30;\n    byte constant proofType_Native = 0xF0;\n    byte constant proofStorage_IPFS = 0x01;\n    uint8 constant networkID_auto = 0;\n    uint8 constant networkID_mainnet = 1;\n    uint8 constant networkID_testnet = 2;\n    uint8 constant networkID_morden = 2;\n    uint8 constant networkID_consensys = 161;\n\n    OraclizeAddrResolverI OAR;\n\n    OraclizeI oraclize;\n    modifier oraclizeAPI {\n        if((address(OAR)==0)||(getCodeSize(address(OAR))==0))\n        oraclize_setNetwork(networkID_auto);\n\n        if(address(oraclize) != OAR.getAddress())\n        oraclize = OraclizeI(OAR.getAddress());\n\n        _;\n    }\n    modifier coupon(string code){\n        oraclize = OraclizeI(OAR.getAddress());\n        oraclize.useCoupon(code);\n        _;\n    }\n\n    function oraclize_setNetwork(uint8 networkID) internal returns(bool){\n        if (getCodeSize(0x1d3B2638a7cC9f2CB3D298A3DA7a90B67E5506ed)>0){ //mainnet\n            OAR = OraclizeAddrResolverI(0x1d3B2638a7cC9f2CB3D298A3DA7a90B67E5506ed);\n            oraclize_setNetworkName(\"eth_mainnet\");\n            return true;\n        }\n        if (getCodeSize(0xc03A2615D5efaf5F49F60B7BB6583eaec212fdf1)>0){ //ropsten testnet\n            OAR = OraclizeAddrResolverI(0xc03A2615D5efaf5F49F60B7BB6583eaec212fdf1);\n            oraclize_setNetworkName(\"eth_ropsten3\");\n            return true;\n        }\n        if (getCodeSize(0xB7A07BcF2Ba2f2703b24C0691b5278999C59AC7e)>0){ //kovan testnet\n            OAR = OraclizeAddrResolverI(0xB7A07BcF2Ba2f2703b24C0691b5278999C59AC7e);\n            oraclize_setNetworkName(\"eth_kovan\");\n            return true;\n        }\n        if (getCodeSize(0x146500cfd35B22E4A392Fe0aDc06De1a1368Ed48)>0){ //rinkeby testnet\n            OAR = OraclizeAddrResolverI(0x146500cfd35B22E4A392Fe0aDc06De1a1368Ed48);\n            oraclize_setNetworkName(\"eth_rinkeby\");\n            return true;\n        }\n        if (getCodeSize(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475)>0){ //ethereum-bridge\n            OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);\n            return true;\n        }\n        if (getCodeSize(0x20e12A1F859B3FeaE5Fb2A0A32C18F5a65555bBF)>0){ //ether.camp ide\n            OAR = OraclizeAddrResolverI(0x20e12A1F859B3FeaE5Fb2A0A32C18F5a65555bBF);\n            return true;\n        }\n        if (getCodeSize(0x51efaF4c8B3C9AfBD5aB9F4bbC82784Ab6ef8fAA)>0){ //browser-solidity\n            OAR = OraclizeAddrResolverI(0x51efaF4c8B3C9AfBD5aB9F4bbC82784Ab6ef8fAA);\n            return true;\n        }\n        return false;\n    }\n\n    function __callback(bytes32 myid, string result) {\n        __callback(myid, result, new bytes(0));\n    }\n    function __callback(bytes32 myid, string result, bytes proof) {\n    }\n\n    function oraclize_useCoupon(string code) oraclizeAPI internal {\n        oraclize.useCoupon(code);\n    }\n\n    function oraclize_getPrice(string datasource) oraclizeAPI internal returns (uint){\n        return oraclize.getPrice(datasource);\n    }\n\n    function oraclize_getPrice(string datasource, uint gaslimit) oraclizeAPI internal returns (uint){\n        return oraclize.getPrice(datasource, gaslimit);\n    }\n\n    function oraclize_query(string datasource, string arg) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        return oraclize.query.value(price)(0, datasource, arg);\n    }\n    function oraclize_query(uint timestamp, string datasource, string arg) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        return oraclize.query.value(price)(timestamp, datasource, arg);\n    }\n    function oraclize_query(uint timestamp, string datasource, string arg, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        return oraclize.query_withGasLimit.value(price)(timestamp, datasource, arg, gaslimit);\n    }\n    function oraclize_query(string datasource, string arg, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        return oraclize.query_withGasLimit.value(price)(0, datasource, arg, gaslimit);\n    }\n    function oraclize_query(string datasource, string arg1, string arg2) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        return oraclize.query2.value(price)(0, datasource, arg1, arg2);\n    }\n    function oraclize_query(uint timestamp, string datasource, string arg1, string arg2) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        return oraclize.query2.value(price)(timestamp, datasource, arg1, arg2);\n    }\n    function oraclize_query(uint timestamp, string datasource, string arg1, string arg2, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        return oraclize.query2_withGasLimit.value(price)(timestamp, datasource, arg1, arg2, gaslimit);\n    }\n    function oraclize_query(string datasource, string arg1, string arg2, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        return oraclize.query2_withGasLimit.value(price)(0, datasource, arg1, arg2, gaslimit);\n    }\n    function oraclize_query(string datasource, string[] argN) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        bytes memory args = stra2cbor(argN);\n        return oraclize.queryN.value(price)(0, datasource, args);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[] argN) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        bytes memory args = stra2cbor(argN);\n        return oraclize.queryN.value(price)(timestamp, datasource, args);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[] argN, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        bytes memory args = stra2cbor(argN);\n        return oraclize.queryN_withGasLimit.value(price)(timestamp, datasource, args, gaslimit);\n    }\n    function oraclize_query(string datasource, string[] argN, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        bytes memory args = stra2cbor(argN);\n        return oraclize.queryN_withGasLimit.value(price)(0, datasource, args, gaslimit);\n    }\n    function oraclize_query(string datasource, string[1] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[1] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[1] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[1] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n\n    function oraclize_query(string datasource, string[2] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[2] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[2] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[2] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[3] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[3] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[3] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[3] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n\n    function oraclize_query(string datasource, string[4] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[4] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[4] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[4] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[5] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[5] args) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, string[5] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, string[5] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        string[] memory dynargs = new string[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[] argN) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        bytes memory args = ba2cbor(argN);\n        return oraclize.queryN.value(price)(0, datasource, args);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[] argN) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource);\n        if (price > 1 ether + tx.gasprice*200000) return 0; // unexpectedly high price\n        bytes memory args = ba2cbor(argN);\n        return oraclize.queryN.value(price)(timestamp, datasource, args);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[] argN, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        bytes memory args = ba2cbor(argN);\n        return oraclize.queryN_withGasLimit.value(price)(timestamp, datasource, args, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[] argN, uint gaslimit) oraclizeAPI internal returns (bytes32 id){\n        uint price = oraclize.getPrice(datasource, gaslimit);\n        if (price > 1 ether + tx.gasprice*gaslimit) return 0; // unexpectedly high price\n        bytes memory args = ba2cbor(argN);\n        return oraclize.queryN_withGasLimit.value(price)(0, datasource, args, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[1] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[1] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[1] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[1] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](1);\n        dynargs[0] = args[0];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n\n    function oraclize_query(string datasource, bytes[2] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[2] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[2] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[2] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](2);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[3] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[3] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[3] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[3] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](3);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n\n    function oraclize_query(string datasource, bytes[4] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[4] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[4] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[4] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](4);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[5] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[5] args) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(timestamp, datasource, dynargs);\n    }\n    function oraclize_query(uint timestamp, string datasource, bytes[5] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(timestamp, datasource, dynargs, gaslimit);\n    }\n    function oraclize_query(string datasource, bytes[5] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {\n        bytes[] memory dynargs = new bytes[](5);\n        dynargs[0] = args[0];\n        dynargs[1] = args[1];\n        dynargs[2] = args[2];\n        dynargs[3] = args[3];\n        dynargs[4] = args[4];\n        return oraclize_query(datasource, dynargs, gaslimit);\n    }\n\n    function oraclize_cbAddress() oraclizeAPI internal returns (address){\n        return oraclize.cbAddress();\n    }\n    function oraclize_setProof(byte proofP) oraclizeAPI internal {\n        return oraclize.setProofType(proofP);\n    }\n    function oraclize_setCustomGasPrice(uint gasPrice) oraclizeAPI internal {\n        return oraclize.setCustomGasPrice(gasPrice);\n    }\n    function oraclize_setConfig(bytes32 config) oraclizeAPI internal {\n        return oraclize.setConfig(config);\n    }\n\n    function oraclize_randomDS_getSessionPubKeyHash() oraclizeAPI internal returns (bytes32){\n        return oraclize.randomDS_getSessionPubKeyHash();\n    }\n\n    function getCodeSize(address _addr) constant internal returns(uint _size) {\n        assembly {\n        _size := extcodesize(_addr)\n        }\n    }\n\n    function parseAddr(string _a) internal returns (address){\n        bytes memory tmp = bytes(_a);\n        uint160 iaddr = 0;\n        uint160 b1;\n        uint160 b2;\n        for (uint i=2; i<2+2*20; i+=2){\n            iaddr *= 256;\n            b1 = uint160(tmp[i]);\n            b2 = uint160(tmp[i+1]);\n            if ((b1 >= 97)&&(b1 <= 102)) b1 -= 87;\n            else if ((b1 >= 65)&&(b1 <= 70)) b1 -= 55;\n            else if ((b1 >= 48)&&(b1 <= 57)) b1 -= 48;\n            if ((b2 >= 97)&&(b2 <= 102)) b2 -= 87;\n            else if ((b2 >= 65)&&(b2 <= 70)) b2 -= 55;\n            else if ((b2 >= 48)&&(b2 <= 57)) b2 -= 48;\n            iaddr += (b1*16+b2);\n        }\n        return address(iaddr);\n    }\n\n    function strCompare(string _a, string _b) internal returns (int) {\n        bytes memory a = bytes(_a);\n        bytes memory b = bytes(_b);\n        uint minLength = a.length;\n        if (b.length < minLength) minLength = b.length;\n        for (uint i = 0; i < minLength; i ++)\n        if (a[i] < b[i])\n        return -1;\n        else if (a[i] > b[i])\n        return 1;\n        if (a.length < b.length)\n        return -1;\n        else if (a.length > b.length)\n        return 1;\n        else\n        return 0;\n    }\n\n    function indexOf(string _haystack, string _needle) internal returns (int) {\n        bytes memory h = bytes(_haystack);\n        bytes memory n = bytes(_needle);\n        if(h.length < 1 || n.length < 1 || (n.length > h.length))\n        return -1;\n        else if(h.length > (2**128 -1))\n        return -1;\n        else\n        {\n            uint subindex = 0;\n            for (uint i = 0; i < h.length; i ++)\n            {\n                if (h[i] == n[0])\n                {\n                    subindex = 1;\n                    while(subindex < n.length && (i + subindex) < h.length && h[i + subindex] == n[subindex])\n                    {\n                        subindex++;\n                    }\n                    if(subindex == n.length)\n                    return int(i);\n                }\n            }\n            return -1;\n        }\n    }\n\n    function strConcat(string _a, string _b, string _c, string _d, string _e) internal returns (string) {\n        bytes memory _ba = bytes(_a);\n        bytes memory _bb = bytes(_b);\n        bytes memory _bc = bytes(_c);\n        bytes memory _bd = bytes(_d);\n        bytes memory _be = bytes(_e);\n        string memory abcde = new string(_ba.length + _bb.length + _bc.length + _bd.length + _be.length);\n        bytes memory babcde = bytes(abcde);\n        uint k = 0;\n        for (uint i = 0; i < _ba.length; i++) babcde[k++] = _ba[i];\n        for (i = 0; i < _bb.length; i++) babcde[k++] = _bb[i];\n        for (i = 0; i < _bc.length; i++) babcde[k++] = _bc[i];\n        for (i = 0; i < _bd.length; i++) babcde[k++] = _bd[i];\n        for (i = 0; i < _be.length; i++) babcde[k++] = _be[i];\n        return string(babcde);\n    }\n\n    function strConcat(string _a, string _b, string _c, string _d) internal returns (string) {\n        return strConcat(_a, _b, _c, _d, \"\");\n    }\n\n    function strConcat(string _a, string _b, string _c) internal returns (string) {\n        return strConcat(_a, _b, _c, \"\", \"\");\n    }\n\n    function strConcat(string _a, string _b) internal returns (string) {\n        return strConcat(_a, _b, \"\", \"\", \"\");\n    }\n\n    // parseInt\n    function parseInt(string _a) internal returns (uint) {\n        return parseInt(_a, 0);\n    }\n\n    // parseInt(parseFloat*10^_b)\n    function parseInt(string _a, uint _b) internal returns (uint) {\n        bytes memory bresult = bytes(_a);\n        uint mint = 0;\n        bool decimals = false;\n        for (uint i=0; i<bresult.length; i++){\n            if ((bresult[i] >= 48)&&(bresult[i] <= 57)){\n                if (decimals){\n                    if (_b == 0) break;\n                    else _b--;\n                }\n                mint *= 10;\n                mint += uint(bresult[i]) - 48;\n            } else if (bresult[i] == 46) decimals = true;\n        }\n        if (_b > 0) mint *= 10**_b;\n        return mint;\n    }\n\n    function uint2str(uint i) internal returns (string){\n        if (i == 0) return \"0\";\n        uint j = i;\n        uint len;\n        while (j != 0){\n            len++;\n            j /= 10;\n        }\n        bytes memory bstr = new bytes(len);\n        uint k = len - 1;\n        while (i != 0){\n            bstr[k--] = byte(48 + i % 10);\n            i /= 10;\n        }\n        return string(bstr);\n    }\n\n    function stra2cbor(string[] arr) internal returns (bytes) {\n        uint arrlen = arr.length;\n\n        // get correct cbor output length\n        uint outputlen = 0;\n        bytes[] memory elemArray = new bytes[](arrlen);\n        for (uint i = 0; i < arrlen; i++) {\n            elemArray[i] = (bytes(arr[i]));\n            outputlen += elemArray[i].length + (elemArray[i].length - 1)/23 + 3; //+3 accounts for paired identifier types\n        }\n        uint ctr = 0;\n        uint cborlen = arrlen + 0x80;\n        outputlen += byte(cborlen).length;\n        bytes memory res = new bytes(outputlen);\n\n        while (byte(cborlen).length > ctr) {\n            res[ctr] = byte(cborlen)[ctr];\n            ctr++;\n        }\n        for (i = 0; i < arrlen; i++) {\n            res[ctr] = 0x5F;\n            ctr++;\n            for (uint x = 0; x < elemArray[i].length; x++) {\n                // if there's a bug with larger strings, this may be the culprit\n                if (x % 23 == 0) {\n                    uint elemcborlen = elemArray[i].length - x >= 24 ? 23 : elemArray[i].length - x;\n                    elemcborlen += 0x40;\n                    uint lctr = ctr;\n                    while (byte(elemcborlen).length > ctr - lctr) {\n                        res[ctr] = byte(elemcborlen)[ctr - lctr];\n                        ctr++;\n                    }\n                }\n                res[ctr] = elemArray[i][x];\n                ctr++;\n            }\n            res[ctr] = 0xFF;\n            ctr++;\n        }\n        return res;\n    }\n\n    function ba2cbor(bytes[] arr) internal returns (bytes) {\n        uint arrlen = arr.length;\n\n        // get correct cbor output length\n        uint outputlen = 0;\n        bytes[] memory elemArray = new bytes[](arrlen);\n        for (uint i = 0; i < arrlen; i++) {\n            elemArray[i] = (bytes(arr[i]));\n            outputlen += elemArray[i].length + (elemArray[i].length - 1)/23 + 3; //+3 accounts for paired identifier types\n        }\n        uint ctr = 0;\n        uint cborlen = arrlen + 0x80;\n        outputlen += byte(cborlen).length;\n        bytes memory res = new bytes(outputlen);\n\n        while (byte(cborlen).length > ctr) {\n            res[ctr] = byte(cborlen)[ctr];\n            ctr++;\n        }\n        for (i = 0; i < arrlen; i++) {\n            res[ctr] = 0x5F;\n            ctr++;\n            for (uint x = 0; x < elemArray[i].length; x++) {\n                // if there's a bug with larger strings, this may be the culprit\n                if (x % 23 == 0) {\n                    uint elemcborlen = elemArray[i].length - x >= 24 ? 23 : elemArray[i].length - x;\n                    elemcborlen += 0x40;\n                    uint lctr = ctr;\n                    while (byte(elemcborlen).length > ctr - lctr) {\n                        res[ctr] = byte(elemcborlen)[ctr - lctr];\n                        ctr++;\n                    }\n                }\n                res[ctr] = elemArray[i][x];\n                ctr++;\n            }\n            res[ctr] = 0xFF;\n            ctr++;\n        }\n        return res;\n    }\n\n\n    string oraclize_network_name;\n    function oraclize_setNetworkName(string _network_name) internal {\n        oraclize_network_name = _network_name;\n    }\n\n    function oraclize_getNetworkName() internal returns (string) {\n        return oraclize_network_name;\n    }\n\n    function oraclize_newRandomDSQuery(uint _delay, uint _nbytes, uint _customGasLimit) internal returns (bytes32){\n        if ((_nbytes == 0)||(_nbytes > 32)) throw;\n        bytes memory nbytes = new bytes(1);\n        nbytes[0] = byte(_nbytes);\n        bytes memory unonce = new bytes(32);\n        bytes memory sessionKeyHash = new bytes(32);\n        bytes32 sessionKeyHash_bytes32 = oraclize_randomDS_getSessionPubKeyHash();\n        assembly {\n        mstore(unonce, 0x20)\n        mstore(add(unonce, 0x20), xor(blockhash(sub(number, 1)), xor(coinbase, timestamp)))\n        mstore(sessionKeyHash, 0x20)\n        mstore(add(sessionKeyHash, 0x20), sessionKeyHash_bytes32)\n        }\n        bytes[3] memory args = [unonce, nbytes, sessionKeyHash];\n        bytes32 queryId = oraclize_query(_delay, \"random\", args, _customGasLimit);\n        oraclize_randomDS_setCommitment(queryId, sha3(bytes8(_delay), args[1], sha256(args[0]), args[2]));\n        return queryId;\n    }\n\n    function oraclize_randomDS_setCommitment(bytes32 queryId, bytes32 commitment) internal {\n        oraclize_randomDS_args[queryId] = commitment;\n    }\n\n    mapping(bytes32=>bytes32) oraclize_randomDS_args;\n    mapping(bytes32=>bool) oraclize_randomDS_sessionKeysHashVerified;\n\n    function verifySig(bytes32 tosignh, bytes dersig, bytes pubkey) internal returns (bool){\n        bool sigok;\n        address signer;\n\n        bytes32 sigr;\n        bytes32 sigs;\n\n        bytes memory sigr_ = new bytes(32);\n        uint offset = 4+(uint(dersig[3]) - 0x20);\n        sigr_ = copyBytes(dersig, offset, 32, sigr_, 0);\n        bytes memory sigs_ = new bytes(32);\n        offset += 32 + 2;\n        sigs_ = copyBytes(dersig, offset+(uint(dersig[offset-1]) - 0x20), 32, sigs_, 0);\n\n        assembly {\n        sigr := mload(add(sigr_, 32))\n        sigs := mload(add(sigs_, 32))\n        }\n\n\n        (sigok, signer) = safer_ecrecover(tosignh, 27, sigr, sigs);\n        if (address(sha3(pubkey)) == signer) return true;\n        else {\n            (sigok, signer) = safer_ecrecover(tosignh, 28, sigr, sigs);\n            return (address(sha3(pubkey)) == signer);\n        }\n    }\n\n    function oraclize_randomDS_proofVerify__sessionKeyValidity(bytes proof, uint sig2offset) internal returns (bool) {\n        bool sigok;\n\n        // Step 6: verify the attestation signature, APPKEY1 must sign the sessionKey from the correct ledger app (CODEHASH)\n        bytes memory sig2 = new bytes(uint(proof[sig2offset+1])+2);\n        copyBytes(proof, sig2offset, sig2.length, sig2, 0);\n\n        bytes memory appkey1_pubkey = new bytes(64);\n        copyBytes(proof, 3+1, 64, appkey1_pubkey, 0);\n\n        bytes memory tosign2 = new bytes(1+65+32);\n        tosign2[0] = 1; //role\n        copyBytes(proof, sig2offset-65, 65, tosign2, 1);\n        bytes memory CODEHASH = hex\"fd94fa71bc0ba10d39d464d0d8f465efeef0a2764e3887fcc9df41ded20f505c\";\n        copyBytes(CODEHASH, 0, 32, tosign2, 1+65);\n        sigok = verifySig(sha256(tosign2), sig2, appkey1_pubkey);\n\n        if (sigok == false) return false;\n\n\n        // Step 7: verify the APPKEY1 provenance (must be signed by Ledger)\n        bytes memory LEDGERKEY = hex\"7fb956469c5c9b89840d55b43537e66a98dd4811ea0a27224272c2e5622911e8537a2f8e86a46baec82864e98dd01e9ccc2f8bc5dfc9cbe5a91a290498dd96e4\";\n\n        bytes memory tosign3 = new bytes(1+65);\n        tosign3[0] = 0xFE;\n        copyBytes(proof, 3, 65, tosign3, 1);\n\n        bytes memory sig3 = new bytes(uint(proof[3+65+1])+2);\n        copyBytes(proof, 3+65, sig3.length, sig3, 0);\n\n        sigok = verifySig(sha256(tosign3), sig3, LEDGERKEY);\n\n        return sigok;\n    }\n\n    modifier oraclize_randomDS_proofVerify(bytes32 _queryId, string _result, bytes _proof) {\n        // Step 1: the prefix has to match 'LP\\x01' (Ledger Proof version 1)\n        if ((_proof[0] != \"L\")||(_proof[1] != \"P\")||(_proof[2] != 1)) throw;\n\n        bool proofVerified = oraclize_randomDS_proofVerify__main(_proof, _queryId, bytes(_result), oraclize_getNetworkName());\n        if (proofVerified == false) throw;\n\n        _;\n    }\n\n    function oraclize_randomDS_proofVerify__returnCode(bytes32 _queryId, string _result, bytes _proof) internal returns (uint8){\n        // Step 1: the prefix has to match 'LP\\x01' (Ledger Proof version 1)\n        if ((_proof[0] != \"L\")||(_proof[1] != \"P\")||(_proof[2] != 1)) return 1;\n\n        bool proofVerified = oraclize_randomDS_proofVerify__main(_proof, _queryId, bytes(_result), oraclize_getNetworkName());\n        if (proofVerified == false) return 2;\n\n        return 0;\n    }\n\n    function matchBytes32Prefix(bytes32 content, bytes prefix) internal returns (bool){\n        bool match_ = true;\n\n        for (var i=0; i<prefix.length; i++){\n            if (content[i] != prefix[i]) match_ = false;\n        }\n\n        return match_;\n    }\n\n    function oraclize_randomDS_proofVerify__main(bytes proof, bytes32 queryId, bytes result, string context_name) internal returns (bool){\n        bool checkok;\n\n\n        // Step 2: the unique keyhash has to match with the sha256 of (context name + queryId)\n        uint ledgerProofLength = 3+65+(uint(proof[3+65+1])+2)+32;\n        bytes memory keyhash = new bytes(32);\n        copyBytes(proof, ledgerProofLength, 32, keyhash, 0);\n        checkok = (sha3(keyhash) == sha3(sha256(context_name, queryId)));\n        if (checkok == false) return false;\n\n        bytes memory sig1 = new bytes(uint(proof[ledgerProofLength+(32+8+1+32)+1])+2);\n        copyBytes(proof, ledgerProofLength+(32+8+1+32), sig1.length, sig1, 0);\n\n\n        // Step 3: we assume sig1 is valid (it will be verified during step 5) and we verify if 'result' is the prefix of sha256(sig1)\n        checkok = matchBytes32Prefix(sha256(sig1), result);\n        if (checkok == false) return false;\n\n\n        // Step 4: commitment match verification, sha3(delay, nbytes, unonce, sessionKeyHash) == commitment in storage.\n        // This is to verify that the computed args match with the ones specified in the query.\n        bytes memory commitmentSlice1 = new bytes(8+1+32);\n        copyBytes(proof, ledgerProofLength+32, 8+1+32, commitmentSlice1, 0);\n\n        bytes memory sessionPubkey = new bytes(64);\n        uint sig2offset = ledgerProofLength+32+(8+1+32)+sig1.length+65;\n        copyBytes(proof, sig2offset-64, 64, sessionPubkey, 0);\n\n        bytes32 sessionPubkeyHash = sha256(sessionPubkey);\n        if (oraclize_randomDS_args[queryId] == sha3(commitmentSlice1, sessionPubkeyHash)){ //unonce, nbytes and sessionKeyHash match\n            delete oraclize_randomDS_args[queryId];\n        } else return false;\n\n\n        // Step 5: validity verification for sig1 (keyhash and args signed with the sessionKey)\n        bytes memory tosign1 = new bytes(32+8+1+32);\n        copyBytes(proof, ledgerProofLength, 32+8+1+32, tosign1, 0);\n        checkok = verifySig(sha256(tosign1), sig1, sessionPubkey);\n        if (checkok == false) return false;\n\n        // verify if sessionPubkeyHash was verified already, if not.. let's do it!\n        if (oraclize_randomDS_sessionKeysHashVerified[sessionPubkeyHash] == false){\n            oraclize_randomDS_sessionKeysHashVerified[sessionPubkeyHash] = oraclize_randomDS_proofVerify__sessionKeyValidity(proof, sig2offset);\n        }\n\n        return oraclize_randomDS_sessionKeysHashVerified[sessionPubkeyHash];\n    }\n\n\n    // the following function has been written by Alex Beregszaszi (@axic), use it under the terms of the MIT license\n    function copyBytes(bytes from, uint fromOffset, uint length, bytes to, uint toOffset) internal returns (bytes) {\n        uint minLength = length + toOffset;\n\n        if (to.length < minLength) {\n            // Buffer too small\n            throw; // Should be a better way?\n        }\n\n        // NOTE: the offset 32 is added to skip the `size` field of both bytes variables\n        uint i = 32 + fromOffset;\n        uint j = 32 + toOffset;\n\n        while (i < (32 + fromOffset + length)) {\n            assembly {\n            let tmp := mload(add(from, i))\n            mstore(add(to, j), tmp)\n            }\n            i += 32;\n            j += 32;\n        }\n\n        return to;\n    }\n\n    // the following function has been written by Alex Beregszaszi (@axic), use it under the terms of the MIT license\n    // Duplicate Solidity's ecrecover, but catching the CALL return value\n    function safer_ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal returns (bool, address) {\n        // We do our own memory management here. Solidity uses memory offset\n        // 0x40 to store the current end of memory. We write past it (as\n        // writes are memory extensions), but don't update the offset so\n        // Solidity will reuse it. The memory used here is only needed for\n        // this context.\n\n        // FIXME: inline assembly can't access return values\n        bool ret;\n        address addr;\n\n        assembly {\n        let size := mload(0x40)\n        mstore(size, hash)\n        mstore(add(size, 32), v)\n        mstore(add(size, 64), r)\n        mstore(add(size, 96), s)\n\n        // NOTE: we can reuse the request memory because we deal with\n        //       the return code\n        ret := call(3000, 1, 0, size, 128, size, 32)\n        addr := mload(size)\n        }\n\n        return (ret, addr);\n    }\n\n    // the following function has been written by Alex Beregszaszi (@axic), use it under the terms of the MIT license\n    function ecrecovery(bytes32 hash, bytes sig) internal returns (bool, address) {\n        bytes32 r;\n        bytes32 s;\n        uint8 v;\n\n        if (sig.length != 65)\n        return (false, 0);\n\n        // The signature format is a compact form of:\n        //   {bytes32 r}{bytes32 s}{uint8 v}\n        // Compact means, uint8 is not padded to 32 bytes.\n        assembly {\n        r := mload(add(sig, 32))\n        s := mload(add(sig, 64))\n\n        // Here we are loading the last 32 bytes. We exploit the fact that\n        // 'mload' will pad with zeroes if we overread.\n        // There is no 'mload8' to do this, but that would be nicer.\n        v := byte(0, mload(add(sig, 96)))\n\n        // Alternative solution:\n        // 'byte' is not working due to the Solidity parser, so lets\n        // use the second best option, 'and'\n        // v := and(mload(add(sig, 65)), 255)\n        }\n\n        // albeit non-transactional signatures are not specified by the YP, one would expect it\n        // to match the YP range of [27, 28]\n        //\n        // geth uses [0, 1] and some clients have followed. This might change, see:\n        //  https://github.com/ethereum/go-ethereum/issues/2053\n        if (v < 27)\n        v += 27;\n\n        if (v != 27 && v != 28)\n        return (false, 0);\n\n        return safer_ecrecover(hash, v, r, s);\n    }\n\n}\n// </ORACLIZE_API>\n\n",
-  "sourcePath": "/Users/bgaughran/IdeaProjects/ppbDice/contracts/oraclizeAPI_0.4.sol",
+  "sourcePath": "/Users/bgaughran/IdeaProjects/ppbDice/contracts/usingOraclize.sol",
   "ast": {
     "attributes": {
-      "absolutePath": "/Users/bgaughran/IdeaProjects/ppbDice/contracts/oraclizeAPI_0.4.sol",
+      "absolutePath": "/Users/bgaughran/IdeaProjects/ppbDice/contracts/usingOraclize.sol",
       "exportedSymbols": {
         "OraclizeAddrResolverI": [
           1019
@@ -7162,7 +7162,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -7790,7 +7790,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -8459,7 +8459,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -9117,7 +9117,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -9760,7 +9760,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -10432,7 +10432,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -11145,7 +11145,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -11847,7 +11847,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -12493,7 +12493,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -13223,7 +13223,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -13994,7 +13994,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -14754,7 +14754,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -31893,7 +31893,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -32623,7 +32623,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -33394,7 +33394,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -34154,7 +34154,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6706,
+                                          "referencedDeclaration": 6724,
                                           "type": "tx",
                                           "value": "tx"
                                         },
@@ -51883,6 +51883,13 @@
                             "isSlot": false,
                             "src": "26008:5:2",
                             "valueSize": 1
+                          },
+                          "_size": {
+                            "declaration": 4410,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "25987:5:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -51891,6 +51898,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "25987:5:2",
+                            "valueSize": 1
+                          },
+                          "_addr": {
+                            "declaration": 4407,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "26008:5:2",
                             "valueSize": 1
                           }
                         }
@@ -52179,7 +52193,7 @@
                     ],
                     "id": 4433,
                     "name": "VariableDeclarationStatement",
-                    "src": "26167:11:2"
+                    "src": "26167:10:2"
                   },
                   {
                     "attributes": {
@@ -52218,7 +52232,7 @@
                     ],
                     "id": 4436,
                     "name": "VariableDeclarationStatement",
-                    "src": "26187:11:2"
+                    "src": "26187:10:2"
                   },
                   {
                     "children": [
@@ -62709,7 +62723,7 @@
                     ],
                     "id": 5163,
                     "name": "VariableDeclarationStatement",
-                    "src": "30204:9:2"
+                    "src": "30204:8:2"
                   },
                   {
                     "children": [
@@ -71608,7 +71622,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 6712,
+                                  "referencedDeclaration": 6722,
                                   "type": "function () pure returns (bytes32)",
                                   "value": "sha3"
                                 },
@@ -71741,7 +71755,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 6719,
+                                      "referencedDeclaration": 6721,
                                       "type": "function () pure returns (bytes32)",
                                       "value": "sha256"
                                     },
@@ -72336,7 +72350,7 @@
                     ],
                     "id": 5838,
                     "name": "VariableDeclarationStatement",
-                    "src": "35166:11:2"
+                    "src": "35166:10:2"
                   },
                   {
                     "attributes": {
@@ -72375,7 +72389,7 @@
                     ],
                     "id": 5841,
                     "name": "VariableDeclarationStatement",
-                    "src": "35186:15:2"
+                    "src": "35186:14:2"
                   },
                   {
                     "attributes": {
@@ -72414,7 +72428,7 @@
                     ],
                     "id": 5844,
                     "name": "VariableDeclarationStatement",
-                    "src": "35211:13:2"
+                    "src": "35211:12:2"
                   },
                   {
                     "attributes": {
@@ -72453,7 +72467,7 @@
                     ],
                     "id": 5847,
                     "name": "VariableDeclarationStatement",
-                    "src": "35233:13:2"
+                    "src": "35233:12:2"
                   },
                   {
                     "attributes": {
@@ -73505,6 +73519,13 @@
                             "isSlot": false,
                             "src": "35642:5:2",
                             "valueSize": 1
+                          },
+                          "sigr": {
+                            "declaration": 5843,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "35586:4:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -73523,6 +73544,13 @@
                             "isSlot": false,
                             "src": "35586:4:2",
                             "valueSize": 1
+                          },
+                          "sigs": {
+                            "declaration": 5846,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "35624:4:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -73531,6 +73559,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "35624:4:2",
+                            "valueSize": 1
+                          },
+                          "sigs_": {
+                            "declaration": 5879,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "35642:5:2",
                             "valueSize": 1
                           }
                         }
@@ -73796,7 +73831,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 6712,
+                                      "referencedDeclaration": 6722,
                                       "type": "function () pure returns (bytes32)",
                                       "value": "sha3"
                                     },
@@ -74144,7 +74179,7 @@
                                                   "overloadedDeclarations": [
                                                     null
                                                   ],
-                                                  "referencedDeclaration": 6712,
+                                                  "referencedDeclaration": 6722,
                                                   "type": "function () pure returns (bytes32)",
                                                   "value": "sha3"
                                                 },
@@ -74372,7 +74407,7 @@
                     ],
                     "id": 5967,
                     "name": "VariableDeclarationStatement",
-                    "src": "36077:11:2"
+                    "src": "36077:10:2"
                   },
                   {
                     "attributes": {
@@ -75818,7 +75853,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 6719,
+                                      "referencedDeclaration": 6721,
                                       "type": "function () pure returns (bytes32)",
                                       "value": "sha256"
                                     },
@@ -76969,7 +77004,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 6719,
+                                      "referencedDeclaration": 6721,
                                       "type": "function () pure returns (bytes32)",
                                       "value": "sha256"
                                     },
@@ -79385,7 +79420,7 @@
                     ],
                     "id": 6293,
                     "name": "VariableDeclarationStatement",
-                    "src": "38760:13:2"
+                    "src": "38760:12:2"
                   },
                   {
                     "attributes": {
@@ -80069,7 +80104,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6712,
+                                          "referencedDeclaration": 6722,
                                           "type": "function () pure returns (bytes32)",
                                           "value": "sha3"
                                         },
@@ -80122,7 +80157,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6712,
+                                          "referencedDeclaration": 6722,
                                           "type": "function () pure returns (bytes32)",
                                           "value": "sha3"
                                         },
@@ -80160,7 +80195,7 @@
                                               "overloadedDeclarations": [
                                                 null
                                               ],
-                                              "referencedDeclaration": 6719,
+                                              "referencedDeclaration": 6721,
                                               "type": "function () pure returns (bytes32)",
                                               "value": "sha256"
                                             },
@@ -81128,7 +81163,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 6719,
+                                      "referencedDeclaration": 6721,
                                       "type": "function () pure returns (bytes32)",
                                       "value": "sha256"
                                     },
@@ -82341,7 +82376,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 6719,
+                              "referencedDeclaration": 6721,
                               "type": "function () pure returns (bytes32)",
                               "value": "sha256"
                             },
@@ -82463,7 +82498,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 6712,
+                                  "referencedDeclaration": 6722,
                                   "type": "function () pure returns (bytes32)",
                                   "value": "sha3"
                                 },
@@ -83174,7 +83209,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 6719,
+                                      "referencedDeclaration": 6721,
                                       "type": "function () pure returns (bytes32)",
                                       "value": "sha256"
                                     },
@@ -84732,7 +84767,7 @@
                     ],
                     "id": 6633,
                     "name": "VariableDeclarationStatement",
-                    "src": "42625:9:2"
+                    "src": "42625:8:2"
                   },
                   {
                     "attributes": {
@@ -84771,7 +84806,7 @@
                     ],
                     "id": 6636,
                     "name": "VariableDeclarationStatement",
-                    "src": "42643:13:2"
+                    "src": "42643:12:2"
                   },
                   {
                     "attributes": {
@@ -84783,6 +84818,13 @@
                             "isSlot": false,
                             "src": "42730:4:2",
                             "valueSize": 1
+                          },
+                          "addr": {
+                            "declaration": 6635,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43000:4:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -84791,6 +84833,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "42766:1:2",
+                            "valueSize": 1
+                          },
+                          "s": {
+                            "declaration": 6624,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "42832:1:2",
                             "valueSize": 1
                           }
                         },
@@ -84801,6 +84850,13 @@
                             "isSlot": false,
                             "src": "42799:1:2",
                             "valueSize": 1
+                          },
+                          "hash": {
+                            "declaration": 6618,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "42730:4:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -84809,6 +84865,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "42832:1:2",
+                            "valueSize": 1
+                          },
+                          "ret": {
+                            "declaration": 6632,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "42947:3:2",
                             "valueSize": 1
                           }
                         },
@@ -84819,6 +84882,13 @@
                             "isSlot": false,
                             "src": "42947:3:2",
                             "valueSize": 1
+                          },
+                          "v": {
+                            "declaration": 6620,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "42766:1:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -84827,6 +84897,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "43000:4:2",
+                            "valueSize": 1
+                          },
+                          "r": {
+                            "declaration": 6622,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "42799:1:2",
                             "valueSize": 1
                           }
                         }
@@ -85075,7 +85152,7 @@
                     ],
                     "id": 6656,
                     "name": "VariableDeclarationStatement",
-                    "src": "43276:10:2"
+                    "src": "43276:9:2"
                   },
                   {
                     "attributes": {
@@ -85114,7 +85191,7 @@
                     ],
                     "id": 6659,
                     "name": "VariableDeclarationStatement",
-                    "src": "43295:10:2"
+                    "src": "43295:9:2"
                   },
                   {
                     "attributes": {
@@ -85153,7 +85230,7 @@
                     ],
                     "id": 6662,
                     "name": "VariableDeclarationStatement",
-                    "src": "43314:8:2"
+                    "src": "43314:7:2"
                   },
                   {
                     "attributes": {
@@ -85303,6 +85380,13 @@
                             "isSlot": false,
                             "src": "43582:3:2",
                             "valueSize": 1
+                          },
+                          "r": {
+                            "declaration": 6655,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43567:1:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -85311,6 +85395,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "43567:1:2",
+                            "valueSize": 1
+                          },
+                          "sig": {
+                            "declaration": 6647,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43582:3:2",
                             "valueSize": 1
                           }
                         },
@@ -85321,6 +85412,13 @@
                             "isSlot": false,
                             "src": "43615:3:2",
                             "valueSize": 1
+                          },
+                          "s": {
+                            "declaration": 6658,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43600:1:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -85329,6 +85427,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "43600:1:2",
+                            "valueSize": 1
+                          },
+                          "sig": {
+                            "declaration": 6647,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43615:3:2",
                             "valueSize": 1
                           }
                         },
@@ -85339,6 +85444,13 @@
                             "isSlot": false,
                             "src": "43857:3:2",
                             "valueSize": 1
+                          },
+                          "v": {
+                            "declaration": 6661,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43834:1:2",
+                            "valueSize": 1
                           }
                         },
                         {
@@ -85347,6 +85459,13 @@
                             "isOffset": false,
                             "isSlot": false,
                             "src": "43834:1:2",
+                            "valueSize": 1
+                          },
+                          "sig": {
+                            "declaration": 6647,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "43857:3:2",
                             "valueSize": 1
                           }
                         }
@@ -85802,7 +85921,11 @@
     "name": "SourceUnit",
     "src": "1213:43334:2"
   },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.18+commit.9cf6e910.Emscripten.clang"
+  },
   "networks": {},
-  "schemaVersion": "1.0.0",
-  "updatedAt": "2017-11-19T23:51:23.179Z"
+  "schemaVersion": "1.0.1",
+  "updatedAt": "2017-11-20T11:13:41.503Z"
 }
