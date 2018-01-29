@@ -1,5 +1,5 @@
 pragma solidity ^0.4.17;
-import "./oraclizeAPI_0.4.sol";
+import "./usingOraclize.sol";
 
 contract Dice is usingOraclize {
 
@@ -63,6 +63,8 @@ contract Dice is usingOraclize {
     event FailedSend(address receiver, uint amount);
     event ValueIsTooBig();
 
+    //BG - This is the constructor whose code is
+    //BG - run only when the contract is created.
     function Dice(uint pwinInitial,
                   uint edgeInitial,
                   uint maxWinInitial,
@@ -73,6 +75,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
+        OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;
