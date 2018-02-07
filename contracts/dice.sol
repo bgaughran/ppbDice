@@ -213,7 +213,14 @@ contract Dice is usingOraclize {
         bet();
     }
 
+    event BetEvent(
+        address indexed _from,
+        uint _value
+    );
+
     function bet() onlyIfNotStopped onlyMoreThanZero {
+        BetEvent(msg.sender, msg.value);
+
         uint oraclizeFee = OraclizeI(OAR.getAddress()).getPrice("URL", ORACLIZE_GAS_LIMIT + safeGas);
         uint betValue = msg.value - oraclizeFee;
         if ((((betValue * ((10000 - edge) - pwin)) / pwin ) <= (maxWin * getBankroll()) / 10000) && (betValue >= minBet)) {
