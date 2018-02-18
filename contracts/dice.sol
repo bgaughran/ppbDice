@@ -4,7 +4,7 @@ import "./usingOraclize.sol";
 contract Dice is usingOraclize {
 
     uint public pwin = 5000; //probability of winning (10000 = 100%)
-    uint public edge = 200; //edge percentage (10000 = 100%)
+    uint public edge = 200; //edge percentage (10000 = 100%); 200=5%
     uint public maxWin = 100; //max win (before edge is taken) as percentage of bankroll (10000 = 100%)
     uint public minBet = 1 finney;
     uint public maxInvestors = 5; //maximum number of investors
@@ -13,7 +13,32 @@ contract Dice is usingOraclize {
     uint public emergencyWithdrawalRatio = 90; //ratio percentage (100 = 100%)
 
     uint safeGas = 25000;
-    uint constant ORACLIZE_GAS_LIMIT = 125000;
+    uint constant ORACLIZE_GAS_LIMIT = 150000;
+
+    /*
+  BEFORE CHANGES...
+  develop:testrpc   Transaction: 0x70a02d0357e2075a16f42c2d007db536ca0aa90ecadb32bf8e09850136c8b016 +0ms
+  develop:testrpc   Gas usage: 150000 +0ms
+  develop:testrpc   Block Number: 76 +0ms
+  develop:testrpc   Block Time: Sun Feb 18 2018 21:42:08 GMT+0000 (GMT) +0ms
+  develop:testrpc   Runtime Error: out of gas +0ms
+
+  AFTER CHANGES....
+  develop:testrpc   Transaction: 0x43b73bdcd5dda6b26e0c67df8adc5119f26576c3e4f4e47b4e89d90e46d1408e +0ms
+  develop:testrpc   Gas usage: 204403 +0ms
+  develop:testrpc   Block Number: 82 +0ms
+  develop:testrpc   Block Time: Sun Feb 18 2018 21:45:03 GMT+0000 (GMT) +1ms
+  develop:testrpc  +0ms
+
+  develop:testrpc  +6ms
+  develop:testrpc   Transaction: 0xe14869faa4131e739318e1b38036147f0da75a4924284e6339d0bc158c7bd395 +1ms
+  develop:testrpc   Gas usage: 156320 +0ms
+  develop:testrpc   Block Number: 83 +0ms
+  develop:testrpc   Block Time: Sun Feb 18 2018 21:45:26 GMT+0000 (GMT) +0ms
+  develop:testrpc  +0ms
+    */
+
+
     uint constant INVALID_BET_MARKER = 99999;
     uint constant EMERGENCY_TIMEOUT = 7 days;
 
@@ -39,7 +64,7 @@ contract Dice is usingOraclize {
     mapping(uint => Investor) public investors;
     uint public numInvestors = 0;
 
-    uint public invested = 0;
+    uint public invested = 100000;
 
     address owner;
     address houseAddress;
@@ -100,6 +125,7 @@ contract Dice is usingOraclize {
     }
 
     modifier onlyOraclize {
+        logPosition = 11;
         if (msg.sender != oraclize_cbAddress()) throw;
         _;
     }
@@ -110,12 +136,14 @@ contract Dice is usingOraclize {
     }
 
     modifier onlyIfNotProcessed(bytes32 myid) {
+        logPosition = 21;
         Bet thisBet = bets[myid];
         if (thisBet.numberRolled > 0) throw;
         _;
     }
 
     modifier onlyIfValidRoll(bytes32 myid, string result) {
+        logPosition = 31;
         Bet thisBet = bets[myid];
         uint numberRolled = parseInt(result);
         if ((numberRolled < 1 || numberRolled > 10000) && thisBet.numberRolled == 0) {
@@ -128,6 +156,8 @@ contract Dice is usingOraclize {
 
 
     modifier onlyIfBetSizeIsStillCorrect(bytes32 myid) {
+        logPosition = 41;
+
         Bet thisBet = bets[myid];
         if ((((thisBet.amountBetted * ((10000 - edge) - pwin)) / pwin ) <= (maxWin * getBankroll()) / 10000)) {
             _;
@@ -209,25 +239,43 @@ contract Dice is usingOraclize {
 
     // SECTION II: BET & BET PROCESSING
 
-    function() {
+    function() payable {
         bet();
     }
 
     event BetEvent(
         address indexed _from,
-        uint _value
+        uint _value,
+        uint _oraclizeFee,
+        uint _edge,
+        uint _pwin,
+        uint _maxWin,
+        uint _bankRoll,
+        uint _minBet
     );
 
-    function bet() onlyIfNotStopped onlyMoreThanZero {
-        BetEvent(msg.sender, msg.value);
+    uint public logPosition = 0;
+    function bet() payable onlyIfNotStopped onlyMoreThanZero {
+        logPosition = 1;
 
         uint oraclizeFee = OraclizeI(OAR.getAddress()).getPrice("URL", ORACLIZE_GAS_LIMIT + safeGas);
         uint betValue = msg.value - oraclizeFee;
+
+        log0(bytes32("HEEEELLLLLOOOO WORLD"));
+        BetEvent(msg.sender, msg.value, oraclizeFee, edge, pwin, maxWin, getBankroll(), minBet);
+
+        logPosition = 2;
+
         if ((((betValue * ((10000 - edge) - pwin)) / pwin ) <= (maxWin * getBankroll()) / 10000) && (betValue >= minBet)) {
+
+            logPosition = 3;
+
             // encrypted arg: '\n{"jsonrpc":2.0,"method":"generateSignedIntegers","params":{"apiKey":"YOUR_API_KEY","n":1,"min":1,"max":10000},"id":1}'
             bytes32 myid = oraclize_query("URL", "json(https://api.random.org/json-rpc/1/invoke).result.random.data.0","BBX1PCQ9134839wTz10OWxXCaZaGk92yF6TES8xA+8IC7xNBlJq5AL0uW3rev7IoApA5DMFmCfKGikjnNbNglKKvwjENYPB8TBJN9tDgdcYNxdWnsYARKMqmjrJKYbBAiws+UU6HrJXUWirO+dBSSJbmjIg+9vmBjSq8KveiBzSGmuQhu7/hSg5rSsSP/r+MhR/Q5ECrOHi+CkP/qdSUTA/QhCCjdzFu+7t3Hs7NU34a+l7JdvDlvD8hoNxyKooMDYNbUA8/eFmPv2d538FN6KJQp+RKr4w4VtAMHdejrLM=", ORACLIZE_GAS_LIMIT + safeGas);
             bets[myid] = Bet(msg.sender, betValue, 0);
             betsKeys.push(myid);
+
+            logPosition = 4;
         }
         else {
             throw;
@@ -240,16 +288,31 @@ contract Dice is usingOraclize {
         onlyIfValidRoll(myid, result)
         onlyIfBetSizeIsStillCorrect(myid)  {
 
+        logPosition = 5;
+
         Bet thisBet = bets[myid];
         uint numberRolled = parseInt(result);
+        setNumberRolled(numberRolled);
         bets[myid].numberRolled = numberRolled;
         isWinningBet(thisBet, numberRolled);
         isLosingBet(thisBet, numberRolled);
         amountWagered += thisBet.amountBetted;
         delete profitDistributed;
+
     }
 
+    //TEMP FOR DEBUGGING - START
+    uint noRolled;
+    function setNumberRolled(uint x) public {
+        noRolled = x;
+    }
+    function getNumberRolled()  public returns (uint) {
+        return noRolled;
+    }
+    //TEMP FOR DEBUGGING - END
+
     function isWinningBet(Bet thisBet, uint numberRolled) private onlyWinningBets(numberRolled) {
+        logPosition = 5551;
         uint winAmount = (thisBet.amountBetted * (10000 - edge)) / pwin;
         BetWon(thisBet.playerAddress, numberRolled, winAmount);
         safeSend(thisBet.playerAddress, winAmount);
@@ -257,6 +320,7 @@ contract Dice is usingOraclize {
     }
 
     function isLosingBet(Bet thisBet, uint numberRolled) private onlyLosingBets(numberRolled) {
+        logPosition = 5552;
         BetLost(thisBet.playerAddress, numberRolled);
         safeSend(thisBet.playerAddress, 1);
         investorsProfit += (thisBet.amountBetted - 1)*(10000 - houseEdge)/10000;
