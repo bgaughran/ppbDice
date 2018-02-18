@@ -6,6 +6,9 @@ import "../contracts/dice.sol";
 
 contract TestDice {
 
+    // Truffle will send the contract one Ether after deploying the contract.
+    uint public initialBalance = 1 ether;
+//
 //    function testConstructor() {
 //
 //        uint pwinExpected = 5000;
@@ -64,20 +67,27 @@ contract TestDice {
 //    }
 
     function testBet() {
-        uint  value = 1 ether;
+
         address from;
         address to;
 
         Dice dice = Dice(DeployedAddresses.Dice());
+        dice.send(initialBalance);
+
+//    }
+//    web3.eth.sendTransaction({ from: from, to: to, value: value, gas: 180000 }, function (err, address) {
 //        dice.call({ from: from, to: to, value: value, gas: 180000 });
-        dice.call();
+//        dice.call();
 //        dice.call(from, to, value, 180000 );
 
 //        need this to debug
 //        console.log(dice);
 
-//        from view-source:https://www.vdice.io/Scripts/vdice.js
-//        web3.eth.sendTransaction({ from: from, to: to, value: value, gas: 180000 }, function (err, address) {
 //    }
     }
+
+//    function () {
+        // This will NOT be executed when Ether is sent. \o/
+       // return initialBalance;
+//    }
 }

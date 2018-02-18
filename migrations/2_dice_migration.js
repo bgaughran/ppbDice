@@ -1,4 +1,5 @@
 var Dice = artifacts.require("./Dice");
+var SimpleStorage = artifacts.require("SimpleStorage");
 
 //var OraclizeI = artifacts.require("OraclizeI");
 //var OraclizeAddrResolverI = artifacts.require("OraclizeAddrResolverI");
@@ -35,5 +36,6 @@ module.exports = function(deployer) {
 //    deployer.link(Dice, [OraclizeI, OraclizeAddrResolverI, usingOraclize]);
 //    deployer.link(Dice, [usingOraclize]);
 
+    deployer.deploy(SimpleStorage);
 
 };

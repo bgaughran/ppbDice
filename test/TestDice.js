@@ -11,6 +11,15 @@ module.exports = function(callback) {
 
         var event = Dice.deployed().BetEvent();
 
+// from view-source:https://www.vdice.io/Scripts/vdice.js
+// if (typeof web3 !== 'undefined') {
+//     web3 = new Web3(web3.currentProvider);
+// } else {
+//     web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+// }
+// to=web3.toWei(1, "ether")
+// web3.eth.sendTransaction({ from: from, to: to, value: value, gas: 180000 }, function (err, address) {
+
         // watch for changes
         event.watch(function(error, result){
             // result will contain various information
