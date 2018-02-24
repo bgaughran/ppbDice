@@ -15,6 +15,10 @@ contract Dice is usingOraclize {
     uint safeGas = 25000;
     uint constant ORACLIZE_GAS_LIMIT = 150000;
 
+    uint public logPosition = 0;
+    uint public investorsProfit = 0;
+    uint public investorsLoses = 0;
+
     /*
   BEFORE CHANGES...
   develop:testrpc   Transaction: 0x70a02d0357e2075a16f42c2d007db536ca0aa90ecadb32bf8e09850136c8b016 +0ms
@@ -76,8 +80,6 @@ contract Dice is usingOraclize {
     bytes32[] betsKeys;
 
     uint public amountWagered = 0;
-    uint public investorsProfit = 0;
-    uint public investorsLoses = 0;
     bool profitDistributed;
 
     event BetWon(address playerAddress, uint numberRolled, uint amountWon);
@@ -100,7 +102,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
-        OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
+        OAR = OraclizeAddrResolverI(0x830939D3A50a643234539BCd178e9c278818C6B5);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;
@@ -254,7 +256,6 @@ contract Dice is usingOraclize {
         uint _minBet
     );
 
-    uint public logPosition = 0;
     function bet() payable onlyIfNotStopped onlyMoreThanZero {
         logPosition = 1;
 
@@ -311,9 +312,11 @@ contract Dice is usingOraclize {
     }
     //TEMP FOR DEBUGGING - END
 
+    uint public winAmount;
     function isWinningBet(Bet thisBet, uint numberRolled) private onlyWinningBets(numberRolled) {
         logPosition = 5551;
-        uint winAmount = (thisBet.amountBetted * (10000 - edge)) / pwin;
+        winAmount = (thisBet.amountBetted * (10000 - edge)) / pwin;
+
         BetWon(thisBet.playerAddress, numberRolled, winAmount);
         safeSend(thisBet.playerAddress, winAmount);
         investorsLoses += (winAmount - thisBet.amountBetted);
