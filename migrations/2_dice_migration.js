@@ -1,11 +1,18 @@
 var Dice = artifacts.require("./Dice");
 var SimpleStorage = artifacts.require("SimpleStorage");
 
+var ConvertLib = artifacts.require("./ConvertLib.sol");
+var MetaCoin = artifacts.require("./MetaCoin.sol");
+
 //var OraclizeI = artifacts.require("OraclizeI");
 //var OraclizeAddrResolverI = artifacts.require("OraclizeAddrResolverI");
 //var usingOraclize = artifacts.require("usingOraclize");
 
 module.exports = function(deployer) {
+
+    deployer.deploy(ConvertLib);
+    deployer.link(ConvertLib, MetaCoin);
+    deployer.deploy(MetaCoin);
 
     //Deploy and link all Oracalize contracts first
 //    deployer.deploy(OraclizeI);

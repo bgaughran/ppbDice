@@ -13,11 +13,13 @@ contract Dice is usingOraclize {
     uint public emergencyWithdrawalRatio = 90; //ratio percentage (100 = 100%)
 
     uint safeGas = 25000;
-    uint constant ORACLIZE_GAS_LIMIT = 150000;
+    uint constant ORACLIZE_GAS_LIMIT = 175000;
 
     uint public logPosition = 0;
     uint public investorsProfit = 0;
     uint public investorsLoses = 0;
+
+    uint public numberOfBets = 0;
 
     /*
   BEFORE CHANGES...
@@ -102,7 +104,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
-        OAR = OraclizeAddrResolverI(0x830939D3A50a643234539BCd178e9c278818C6B5);
+        OAR = OraclizeAddrResolverI(0xAD9dab225453248DD12380DBf6e5C34f486D4e91);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;
@@ -279,6 +281,7 @@ contract Dice is usingOraclize {
             logPosition = 4;
         }
         else {
+            logPosition = 9999;
             throw;
         }
     }
@@ -299,6 +302,8 @@ contract Dice is usingOraclize {
         isLosingBet(thisBet, numberRolled);
         amountWagered += thisBet.amountBetted;
         delete profitDistributed;
+
+        numberOfBets += 1; //bet counter
 
     }
 
