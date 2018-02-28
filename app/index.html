@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Paddy Power Betfair Dice - Proof of Concept</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <script src="./app.js"></script>
+</head>
+<body>
+  <h1>Paddy Power Betfair Dice</h1>
+  <h2>Proof of Concept</h2>
+
+  <h3>Bet counter: <span class="black"><span id="numberOfBets"></span> bets</span></h3>
+  <h3>Ether won: <span class="black"><span id="balance"></span></span></h3>
+
+  <br>
+  <h1>Roll the Dice (between 1 & 10,000)!!</h1>
+  <br><label for="amount">Enter the amount to bet in Ether:</label>
+  <input type="text" id="amount" placeholder="e.g., 95"></input>
+  <!--<br><label for="receiver">To Address:</label><input type="text" id="receiver" placeholder="e.g., 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"></input>-->
+  <br><br><button id="send" onclick="App.roll()">Press to Roll</button>
+  <br><br>
+  <span id="status"></span>
+  <br>
+  <span class="hint"><strong>Step 1:</strong> Enter the amount to bet and press the button.</span>
+  <br>
+  <span class="hint"><strong>Step 2:</strong> A Random Lucky Number is Chosen between 1 & 10,000.</span>
+  <br>
+  <span class="hint"><strong>Step 3:</strong> Win sent back to you automatically if you roll between 1 & 5,000. Loss sends you back 1 Wei.</span>
+  <br>
+  <br>
+  <span class="hint"><strong>Hint:</strong> open the browser developer console to view any errors and warnings.</span>
+</body>
+</html>
