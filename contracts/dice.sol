@@ -104,7 +104,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
-        OAR = OraclizeAddrResolverI(0xAD9dab225453248DD12380DBf6e5C34f486D4e91);
+        OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;
@@ -279,6 +279,9 @@ contract Dice is usingOraclize {
             betsKeys.push(myid);
 
             logPosition = 4;
+
+            numberOfBets += 1; //bet counter
+
         }
         else {
             logPosition = 9999;
@@ -286,6 +289,7 @@ contract Dice is usingOraclize {
         }
     }
 
+    uint public numberRolled;
     function __callback (bytes32 myid, string result, bytes proof)
         onlyOraclize
         onlyIfNotProcessed(myid)
@@ -294,9 +298,10 @@ contract Dice is usingOraclize {
 
         logPosition = 5;
 
+
+
         Bet thisBet = bets[myid];
-        uint numberRolled = parseInt(result);
-        setNumberRolled(numberRolled);
+        numberRolled = parseInt(result);
         bets[myid].numberRolled = numberRolled;
         isWinningBet(thisBet, numberRolled);
         isLosingBet(thisBet, numberRolled);
@@ -307,20 +312,14 @@ contract Dice is usingOraclize {
 
     }
 
-    //TEMP FOR DEBUGGING - START
-    uint noRolled;
-    function setNumberRolled(uint x) public {
-        noRolled = x;
-    }
-    function getNumberRolled()  public returns (uint) {
-        return noRolled;
-    }
-    //TEMP FOR DEBUGGING - END
-
     uint public winAmount;
+    uint public totalWonOverall = 0;
+
     function isWinningBet(Bet thisBet, uint numberRolled) private onlyWinningBets(numberRolled) {
         logPosition = 5551;
+
         winAmount = (thisBet.amountBetted * (10000 - edge)) / pwin;
+        totalWonOverall+= winAmount;
 
         BetWon(thisBet.playerAddress, numberRolled, winAmount);
         safeSend(thisBet.playerAddress, winAmount);

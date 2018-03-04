@@ -43,6 +43,7 @@ window.App = {
           }
 
           accounts = accs;
+          //pick the first account available - code only suitable for POC!
           account = accounts[0];
 
           self.refreshValues();
@@ -56,13 +57,14 @@ window.App = {
 
   refreshValues: function() {
     var self = this;
+      var meta;
 
-    var meta;
     Dice.deployed().then(function(instance) {
       meta = instance;
       return meta.numberOfBets.call();
     }).then(function(value) {
-      var numberOfBets_element = document.getElementById("numberOfBets");
+        var numberOfBets_element = document.getElementById("numberOfBets");
+        console.log("numberOfBets="+value)
         numberOfBets_element.innerHTML = value.valueOf();
     }).catch(function(e) {
       console.log(e);
@@ -71,16 +73,53 @@ window.App = {
 
     Dice.deployed().then(function(instance) {
       meta = instance;
-      return instance.logPosition.call();
+      return meta.winAmount.call();
     }).then(function(value) {
-        console.log("logPosition="+ value.toNumber());
+        console.log("winAmount="+value)
+        var winAmount_element = document.getElementById("winAmount");
+        winAmount_element.innerHTML = value.valueOf();
     }).catch(function(e) {
       console.log(e);
       self.setStatus("Error getting values; see log.");
     });
 
-      Dice.deployed().then(function(instance){return instance.logPosition.call();}).then(function(value){return value.toNumber()});
+      Dice.deployed().then(function(instance) {
+          meta = instance;
+          return meta.totalWonOverall.call();
+      }).then(function(value) {
+          console.log("totalWonOverall="+value)
+          var overallWinnings_element = document.getElementById("overallWinnings");
+          overallWinnings_element.innerHTML = value.valueOf();
+      }).catch(function(e) {
+          console.log(e);
+          self.setStatus("Error getting values; see log.");
+      });
 
+      Dice.deployed().then(function(instance) {
+          meta = instance;
+          return meta.numberRolled.call();
+      }).then(function(value) {
+          console.log("numberRolled="+value)
+          var numberRolled_element = document.getElementById("numberRolled");
+          numberRolled_element.innerHTML = value.valueOf();
+      }).catch(function(e) {
+          console.log(e);
+          self.setStatus("Error getting values; see log.");
+      });
+
+      var playerBalance_element = document.getElementById("playerBalance");
+      playerBalance_element.innerHTML = web3.fromWei(web3.eth.getBalance(account));
+
+
+      Dice.deployed().then(function(instance) {
+          meta = instance;
+          return instance.logPosition.call();
+      }).then(function(value) {
+          console.log("logPosition="+ value.toNumber());
+      }).catch(function(e) {
+          console.log(e);
+          self.setStatus("Error getting values; see log.");
+      });
   },
 
   roll: function() {
@@ -89,21 +128,61 @@ window.App = {
     var amount = parseInt(document.getElementById("amount").value);
     // var receiver = document.getElementById("receiver").value;
 
-    this.setStatus("Initiating transaction... (please wait)");
-    console.log("amount="+amount);
+    this.setStatus("Rolling the dice... (please wait)");
+    // console.log("amount="+amount);
 
     var meta;
     Dice.deployed().then(function(instance) {
-      meta = instance;
-      return meta.bet({value: amount, from: account});
+        meta = instance;
+      // return meta.bet({value: 1, from:'0x627306090abab3a6e1400e9345bc60c78a8bef57', gas:3000000});
+      return meta.bet({value: amount, from: account, gas:2000000});
+
     }).then(function() {
-      self.setStatus("Transaction complete!");
-      self.refreshValues();
+
+        Dice.deployed().then(function(instance) {
+            meta = instance;
+
+            var eventWon = meta.BetWon({_from:web3.eth.coinbase},{fromBlock: 0, toBlock: 'latest'});
+            eventWon.watch(function(error, result){
+                if (!error) {
+                    // console.log("result="+result);
+                    self.setStatus("Bet Won. Congrats!");
+                    self.refreshValues();
+                } else {
+                    console.log("error="+error);
+                    self.setStatus("Error encountered!");
+                }
+            });
+
+            var eventLost = meta.BetLost({_from:web3.eth.coinbase},{fromBlock: 0, toBlock: 'latest'});
+            eventLost.watch(function(error, result){
+                if (!error) {
+                    console.log("result="+result);
+                    self.setStatus("Bet Lost. Maybe next time?!");
+                    self.refreshValues();
+                } else {
+                    console.log("error="+error);
+                    self.setStatus("Error encountered!");
+                }
+            });
+        });
+
     }).catch(function(e) {
       console.log(e);
       self.setStatus("Error rolling; see log.");
     });
   }
+};
+
+function printAllBalances() {
+    Dice.setProvider(web3.currentProvider);
+
+    var i =0;
+    web3.eth.accounts.forEach(
+        function(e){
+            console.log("  eth.accounts["+i+"]: " +  e + " \tbalance: " + web3.fromWei(web3.eth.getBalance(e), "ether") + " ether"); i++;
+        }
+    )
 };
 
 window.addEventListener('load', function() {

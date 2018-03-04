@@ -10,15 +10,16 @@
   <h2>Proof of Concept</h2>
 
   <h3>Bet counter: <span class="black"><span id="numberOfBets"></span> bets</span></h3>
-  <h3>Ether won: <span class="black"><span id="balance"></span></span></h3>
+  <h3>Player balance: <span class="black"><span id="playerBalance"></span></span></h3>
+  <h3>Ether won on last roll: <span class="black"><span id="winAmount"></span></span></h3>
+  <h3>Ether won overall: <span class="black"><span id="overallWinnings"></span></span></h3>
 
   <br>
-  <h1>Roll the Dice (between 1 & 10,000)!!</h1>
+  <h1>Roll the Dice (less than 5,000 to win)!!</h1>
   <br><label for="amount">Enter the amount to bet in Ether:</label>
   <input type="text" id="amount" placeholder="e.g., 95"></input>
   <!--<br><label for="receiver">To Address:</label><input type="text" id="receiver" placeholder="e.g., 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"></input>-->
-  <br><br><button id="send" onclick="App.roll()">Press to Roll</button>
-  <br><br>
+  <br><br><button id="send" onclick="App.roll()">Press to Roll</button>   <h3>Last roll result: <span class="black"><span id="numberRolled"></span></span></h3>
   <span id="status"></span>
   <br>
   <span class="hint"><strong>Step 1:</strong> Enter the amount to bet and press the button.</span>
