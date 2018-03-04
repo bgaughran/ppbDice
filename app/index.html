@@ -16,12 +16,13 @@
 
   <br>
   <h1>Roll the Dice (less than 5,000 to win)!!</h1>
-  <br><label for="amount">Enter the amount to bet in Ether:</label>
+  <br><label for="amount">Enter your bet in Ether:</label>
   <input type="text" id="amount" placeholder="e.g., 95"></input>
   <!--<br><label for="receiver">To Address:</label><input type="text" id="receiver" placeholder="e.g., 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"></input>-->
-  <br><br><button id="send" onclick="App.roll()">Press to Roll</button>   <h3>Last roll result: <span class="black"><span id="numberRolled"></span></span></h3>
-  <span id="status"></span>
-  <br>
+  <br><br><button id="send" onclick="App.roll()">Press to Roll</button> <span id="status"></span>
+  <br/>
+  <h3>Last roll result: <span class="black"><span style="color:red" id="numberRolled"></span></span></h3>
+
   <span class="hint"><strong>Step 1:</strong> Enter the amount to bet and press the button.</span>
   <br>
   <span class="hint"><strong>Step 2:</strong> A Random Lucky Number is Chosen between 1 & 10,000.</span>
