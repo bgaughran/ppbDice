@@ -3,7 +3,7 @@ import "./usingOraclize.sol";
 
 contract Dice is usingOraclize {
 
-    uint public pwin = 9999; //probability of winning (10000 = 100%)
+    uint public pwin = 9000; //probability of winning (10000 = 100%)
     uint public edge = 200; //edge percentage (10000 = 100%); 200=5%
     uint public maxWin = 100; //max win (before edge is taken) as percentage of bankroll (10000 = 100%)
     uint public minBet = 1 finney;
@@ -104,7 +104,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
-        OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
+        OAR = OraclizeAddrResolverI(0xf89B1f6a0D80D83B95017f137eb8404DA5A2Ac4B);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;
