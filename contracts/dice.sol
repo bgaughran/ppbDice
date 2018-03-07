@@ -1,9 +1,9 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.18;
 import "./usingOraclize.sol";
 
 contract Dice is usingOraclize {
 
-    uint public pwin = 9000; //probability of winning (10000 = 100%)
+    uint public pwin = 5000; //probability of winning (10000 = 100%)
     uint public edge = 200; //edge percentage (10000 = 100%); 200=5%
     uint public maxWin = 100; //max win (before edge is taken) as percentage of bankroll (10000 = 100%)
     uint public minBet = 1 finney;
@@ -84,8 +84,7 @@ contract Dice is usingOraclize {
     uint public amountWagered = 0;
     bool profitDistributed;
 
-    event BetWon(address playerAddress, uint numberRolled, uint amountWon);
-    event BetLost(address playerAddress, uint numberRolled);
+    event BetResulted(address playerAddress, uint numberRolled, uint amountWon);
     event EmergencyWithdrawalProposed();
     event EmergencyWithdrawalFailed(address withdrawalAddress);
     event EmergencyWithdrawalSucceeded(address withdrawalAddress, uint amountWithdrawn);
@@ -104,7 +103,7 @@ contract Dice is usingOraclize {
                   uint emergencyWithdrawalRatioInitial
                   ) {
 
-        OAR = OraclizeAddrResolverI(0xf89B1f6a0D80D83B95017f137eb8404DA5A2Ac4B);
+        OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
         oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
 
         pwin = pwinInitial;
@@ -258,10 +257,16 @@ contract Dice is usingOraclize {
         uint _minBet
     );
 
+    uint public oraclizeFee;
     function bet() payable onlyIfNotStopped onlyMoreThanZero {
         logPosition = 1;
 
-        uint oraclizeFee = OraclizeI(OAR.getAddress()).getPrice("URL", ORACLIZE_GAS_LIMIT + safeGas);
+        oraclizeFee = OraclizeI(OAR.getAddress()).getPrice("URL", ORACLIZE_GAS_LIMIT + safeGas);
+//        Why come back as 0?
+//        What is getPrice? Am I using return value correctly?
+//        Understand concept of gas
+//        Look at previous Gitter replies
+
         uint betValue = msg.value - oraclizeFee;
 
         BetEvent(msg.sender, msg.value, oraclizeFee, edge, pwin, maxWin, getBankroll(), minBet);
@@ -273,14 +278,30 @@ contract Dice is usingOraclize {
             logPosition = 3;
 
             // encrypted arg: '\n{"jsonrpc":2.0,"method":"generateSignedIntegers","params":{"apiKey":"YOUR_API_KEY","n":1,"min":1,"max":10000},"id":1}'
-            bytes32 myid = oraclize_query("URL", "json(https://api.random.org/json-rpc/1/invoke).result.random.data.0","BBX1PCQ9134839wTz10OWxXCaZaGk92yF6TES8xA+8IC7xNBlJq5AL0uW3rev7IoApA5DMFmCfKGikjnNbNglKKvwjENYPB8TBJN9tDgdcYNxdWnsYARKMqmjrJKYbBAiws+UU6HrJXUWirO+dBSSJbmjIg+9vmBjSq8KveiBzSGmuQhu7/hSg5rSsSP/r+MhR/Q5ECrOHi+CkP/qdSUTA/QhCCjdzFu+7t3Hs7NU34a+l7JdvDlvD8hoNxyKooMDYNbUA8/eFmPv2d538FN6KJQp+RKr4w4VtAMHdejrLM=", ORACLIZE_GAS_LIMIT + safeGas);
+//            bytes32 myid = oraclize_query(
+//                "URL",
+//                "json(https://api.random.org/json-rpc/1/invoke).result.random.data.0","BBX1PCQ9134839wTz10OWxXCaZaGk92yF6TES8xA+8IC7xNBlJq5AL0uW3rev7IoApA5DMFmCfKGikjnNbNglKKvwjENYPB8TBJN9tDgdcYNxdWnsYARKMqmjrJKYbBAiws+UU6HrJXUWirO+dBSSJbmjIg+9vmBjSq8KveiBzSGmuQhu7/hSg5rSsSP/r+MhR/Q5ECrOHi+CkP/qdSUTA/QhCCjdzFu+7t3Hs7NU34a+l7JdvDlvD8hoNxyKooMDYNbUA8/eFmPv2d538FN6KJQp+RKr4w4VtAMHdejrLM=",
+//                ORACLIZE_GAS_LIMIT + safeGas
+//            );
+
 //            bytes32 myid =
 //            oraclize_query(
 //                "nested",
-//                "[URL] ['json(https://api.random.org/json-rpc/1/invoke).result.random.data.0', '\\n{\"jsonrpc\":\"2.0\",\"method\":\"generateSignedIntegers\",\"params\":{\"apiKey\":${[decrypt] BGFVFgEmxZTIpg1u+Oaakn9M02RNztU4zgU23g78Jw9jUDjV6nFv5lVOPgn8wQ4a3WD1M0GvC1WWvWfJisUkzOlmSnPZOXTJsxsUKz80DfQZlPmHZ6SE5Nw4TKvwFPfRKKVnr3lk4bAwu/iiU3IBqXZdRfd3R9U=},\"n\":1,\"min\":1,\"max\":10000${[identity] \"}\"},\"id\":1${[identity] \"}\"}']",
-//                ORACLIZE_GAS_LIMIT + safeGas
+//                "[URL] ['json(https://api.random.org/json-rpc/1/invoke).result.random.data.0', '\\n{\"jsonrpc\":\"2.0\",\"method\":\"generateSignedIntegers\",\"params\":{\"apiKey\":,\"n\":1,\"min\":1,\"max\":10000${[identity] \"}\"},\"id\":1${[identity] \"}\"}']",
+//                "[URL] ['json(https://api.random.org/json-rpc/1/invoke).result.random.data.0', '\\n{\"jsonrpc\":\"2.0\",\"method\":\"generateSignedIntegers\",\"params\":{\"apiKey\":,\"n\":1,\"min\":1,\"max\":10000,\"replacement\":true,\"base\":10},\"id\":16790\"}']",
+
+            //                ORACLIZE_GAS_LIMIT + safeGas
 //            );
-            bets[myid] = Bet(msg.sender, betValue, 0);
+
+            //         8ae1f7a1-67b0-4409-a515-869b3e1f7e7a
+            bytes32 myid =
+            oraclize_query(
+                "nested",
+                "[URL] ['json(https://api.random.org/json-rpc/1/invoke).result.random.data.0', '\\n{\"jsonrpc\":\"2.0\",\"method\":\"generateSignedIntegers\",\"params\":{\"apiKey\":\"8ae1f7a1-67b0-4409-a515-869b3e1f7e7a\",\"n\":1,\"min\":1,\"max\":10000,\"replacement\":true,\"base\":10},\"id\":16790}']",
+                ORACLIZE_GAS_LIMIT + safeGas
+            );
+
+        bets[myid] = Bet(msg.sender, betValue, 0);
             betsKeys.push(myid);
 
             logPosition = 4;
@@ -297,7 +318,8 @@ contract Dice is usingOraclize {
         onlyOraclize
         onlyIfNotProcessed(myid)
         onlyIfValidRoll(myid, result)
-        onlyIfBetSizeIsStillCorrect(myid)  {
+        onlyIfBetSizeIsStillCorrect(myid)
+    {
 
         logPosition = 5;
 
@@ -322,18 +344,18 @@ contract Dice is usingOraclize {
         winAmount = (thisBet.amountBetted * (10000 - edge)) / pwin;
         totalWonOverall+= winAmount;
 
-        BetWon(thisBet.playerAddress, numberRolled, winAmount);
-        safeSend(thisBet.playerAddress, winAmount);
+        BetResulted(thisBet.playerAddress, numberRolled, winAmount);
+//        safeSend(thisBet.playerAddress, winAmount);
         investorsLoses += (winAmount - thisBet.amountBetted);
     }
 
     function isLosingBet(Bet thisBet, uint numberRolled) private onlyLosingBets(numberRolled) {
         logPosition = 5552;
-        BetLost(thisBet.playerAddress, numberRolled);
-        safeSend(thisBet.playerAddress, 1);
+        BetResulted(thisBet.playerAddress, numberRolled, 0);
+//        safeSend(thisBet.playerAddress, 1);
         investorsProfit += (thisBet.amountBetted - 1)*(10000 - houseEdge)/10000;
         uint houseProfit = (thisBet.amountBetted - 1)*(houseEdge)/10000;
-        safeSend(houseAddress, houseProfit);
+//        safeSend(houseAddress, houseProfit);
     }
 
 

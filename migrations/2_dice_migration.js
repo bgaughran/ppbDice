@@ -19,8 +19,8 @@ module.exports = function(deployer) {
 //    deployer.deploy(OraclizeAddrResolverI);
 //    deployer.deploy(usingOraclize);
 
-  var pwin = 9000; // probability of winning (10000 = 100%)
-  var edge = 200; // edge percentage (10000 = 100%)
+  var pwin = 5000; // probability of winning (10000 = 100%)
+  var edge = 200; // edge percentage (10000 = 100%; 200=2%)
   var maxWin = 100; //max win (before edge is taken) as percentage of bankroll (10000 = 100%)
   var minBet = 1; // min bet in finneys
   var maxInvestors = 5; //maximum number of investors
