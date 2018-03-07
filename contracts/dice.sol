@@ -301,7 +301,7 @@ contract Dice is usingOraclize {
                 ORACLIZE_GAS_LIMIT + safeGas
             );
 
-        bets[myid] = Bet(msg.sender, betValue, 0);
+            bets[myid] = Bet(msg.sender, betValue, 0);
             betsKeys.push(myid);
 
             logPosition = 4;
@@ -315,10 +315,11 @@ contract Dice is usingOraclize {
 
     uint public numberRolled;
     function __callback (bytes32 myid, string result, bytes proof)
-        onlyOraclize
-        onlyIfNotProcessed(myid)
-        onlyIfValidRoll(myid, result)
-        onlyIfBetSizeIsStillCorrect(myid)
+//HELPS MINIMISE OUT OF GAS ON CALLBACK!!!
+//        onlyOraclize
+//        onlyIfNotProcessed(myid)
+//        onlyIfValidRoll(myid, result)
+//        onlyIfBetSizeIsStillCorrect(myid)
     {
 
         logPosition = 5;
@@ -337,6 +338,8 @@ contract Dice is usingOraclize {
 
     uint public winAmount;
     uint public totalWonOverall;
+    address public playerAddress;
+    address public houseAddressPublic;
 
     function isWinningBet(Bet thisBet, uint numberRolled) private onlyWinningBets(numberRolled) {
         logPosition = 5551;
@@ -345,17 +348,20 @@ contract Dice is usingOraclize {
         totalWonOverall+= winAmount;
 
         BetResulted(thisBet.playerAddress, numberRolled, winAmount);
-//        safeSend(thisBet.playerAddress, winAmount);
+        safeSend(thisBet.playerAddress, winAmount);
+        playerAddress = thisBet.playerAddress;
+
         investorsLoses += (winAmount - thisBet.amountBetted);
     }
 
     function isLosingBet(Bet thisBet, uint numberRolled) private onlyLosingBets(numberRolled) {
         logPosition = 5552;
         BetResulted(thisBet.playerAddress, numberRolled, 0);
-//        safeSend(thisBet.playerAddress, 1);
+        safeSend(thisBet.playerAddress, 1);
         investorsProfit += (thisBet.amountBetted - 1)*(10000 - houseEdge)/10000;
         uint houseProfit = (thisBet.amountBetted - 1)*(houseEdge)/10000;
-//        safeSend(houseAddress, houseProfit);
+        safeSend(houseAddress, houseProfit);
+        houseAddressPublic = houseAddress;
     }
 
 

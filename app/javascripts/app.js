@@ -19,6 +19,7 @@ var Dice = contract(vdice_artifacts);
 // For application bootstrapping, check out window.addEventListener below.
 var accounts;
 var account;
+var account2;
 var numberOfBets;
 
 
@@ -45,6 +46,7 @@ window.App = {
           accounts = accs;
           //pick the first account available - code only suitable for POC!
           account = accounts[0];
+          account2 = accounts[1];
 
           self.refreshValues();
       });
@@ -56,6 +58,8 @@ window.App = {
   },
 
   refreshValues: function() {
+    printAllBalances();
+
     var self = this;
       var meta;
 
@@ -95,9 +99,30 @@ window.App = {
           self.setStatus("Error getting values; see log.");
       });
 
-      var playerBalance_element = document.getElementById("playerBalance");
-      playerBalance_element.innerHTML = web3.fromWei(web3.eth.getBalance(account));
+      var houseBalance_element = document.getElementById("houseBalance");
+      houseBalance_element.innerHTML = web3.fromWei(web3.eth.getBalance(account));
 
+      var playerBalance_element = document.getElementById("playerBalance");
+      playerBalance_element.innerHTML = web3.fromWei(web3.eth.getBalance(account2));
+
+
+      Dice.deployed().then(function(instance) {
+          return instance.playerAddress.call();
+      }).then(function(value) {
+          console.log("playerAddress="+ value);
+      }).catch(function(e) {
+          console.log(e);
+          self.setStatus("Error getting values; see log.");
+      });
+
+      Dice.deployed().then(function(instance) {
+          return instance.houseAddressPublic.call();
+      }).then(function(value) {
+          console.log("houseAddressPublic="+ value);
+      }).catch(function(e) {
+          console.log(e);
+          self.setStatus("Error getting values; see log.");
+      });
 
       Dice.deployed().then(function(instance) {
           return instance.logPosition.call();
@@ -122,8 +147,8 @@ window.App = {
     Dice.deployed().then(function(instance) {
         meta = instance;
       // return meta.bet({value: 1, from:'0x627306090abab3a6e1400e9345bc60c78a8bef57', gas:3000000});
-      return meta.bet({value: amount, from: account, gas:2000000});
-      // return meta.bet({value: 1, from: account, gas:2000000});
+      return meta.bet({value: amount, from: account2, gas:2000000});
+      // return meta.bet({value: 1, from: account2, gas:2000000});
 
     }).then(function() {
 
@@ -184,6 +209,9 @@ function printAllBalances() {
             console.log("  eth.accounts["+i+"]: " +  e + " \tbalance: " + web3.fromWei(web3.eth.getBalance(e), "ether") + " ether"); i++;
         }
     )
+    var defaultAddress = '0x0000000000000000000000000000000000000000';
+    console.log("  defaultAddress: " +  defaultAddress + " \tbalance: " + web3.fromWei(web3.eth.getBalance(defaultAddress), "ether") + " ether");
+
 };
 
 window.addEventListener('load', function() {
