@@ -8,7 +8,7 @@ contract Dice is usingOraclize {
     uint public maxWin = 100; //max win (before edge is taken) as percentage of bankroll (10000 = 100%)
     uint public minBet = 1 finney;
     uint public maxInvestors = 5; //maximum number of investors
-    uint public houseEdge = 50; //edge percentage (10000 = 100%)
+    uint public houseEdge = 5000; //edge percentage (10000 = 100%)
     uint public divestFee = 50; //divest fee percentage (10000 = 100%)
     uint public emergencyWithdrawalRatio = 90; //ratio percentage (100 = 100%)
 
@@ -84,7 +84,7 @@ contract Dice is usingOraclize {
     uint public amountWagered = 0;
     bool profitDistributed;
 
-    event BetResulted(address playerAddress, uint numberRolled, uint amountWon);
+    event BetResulted(address playerAddress, uint numberRolled, uint amountWon, uint contractBalance);
     event EmergencyWithdrawalProposed();
     event EmergencyWithdrawalFailed(address withdrawalAddress);
     event EmergencyWithdrawalSucceeded(address withdrawalAddress, uint amountWithdrawn);
@@ -227,17 +227,31 @@ contract Dice is usingOraclize {
 
     function safeSend(address addr, uint value) private {
         if (this.balance < value) {
+            logPosition = 9551;
             ValueIsTooBig();
             return;
         }
 
-        if (!(addr.call.gas(safeGas).value(value)())) {
-            FailedSend(addr, value);
-            if (addr != houseAddress) {
-                //Forward to house address all change
-                if (!(houseAddress.call.gas(safeGas).value(value)())) FailedSend(houseAddress, value);
-            }
-        }
+        logPosition = 9552;
+
+        //addr.transfer(value);
+
+        logPosition = 9553;
+
+//        if (!(addr.call.gas(safeGas).value(value)())) {
+//            FailedSend(addr, value);
+//            logPosition = 9553;
+//
+//          if (addr != houseAddress) {
+//                //Forward to house address all change
+//                logPosition = 9554;
+//
+//                if (!(houseAddress.call.gas(safeGas).value(value)())) {
+//                    logPosition = 9555;
+//                    FailedSend(houseAddress, value);
+//                }
+//          }
+//        }
     }
 
     // SECTION II: BET & BET PROCESSING
@@ -315,11 +329,11 @@ contract Dice is usingOraclize {
 
     uint public numberRolled;
     function __callback (bytes32 myid, string result, bytes proof)
-//HELPS MINIMISE OUT OF GAS ON CALLBACK!!!
-//        onlyOraclize
-//        onlyIfNotProcessed(myid)
-//        onlyIfValidRoll(myid, result)
-//        onlyIfBetSizeIsStillCorrect(myid)
+//HELPS MINIMISE OUT OF GAS ON CALLBACK!!!!
+ //        onlyOraclize
+ //        onlyIfNotProcessed(myid)
+ //        onlyIfValidRoll(myid, result)
+ //        onlyIfBetSizeIsStillCorrect(myid)
     {
 
         logPosition = 5;
@@ -347,8 +361,8 @@ contract Dice is usingOraclize {
         winAmount = (thisBet.amountBetted * (10000 - edge)) / pwin;
         totalWonOverall+= winAmount;
 
-        BetResulted(thisBet.playerAddress, numberRolled, winAmount);
-        safeSend(thisBet.playerAddress, winAmount);
+        BetResulted(thisBet.playerAddress, numberRolled, winAmount, this.balance);
+//        safeSend(thisBet.playerAddress, winAmount);
         playerAddress = thisBet.playerAddress;
 
         investorsLoses += (winAmount - thisBet.amountBetted);
@@ -356,8 +370,8 @@ contract Dice is usingOraclize {
 
     function isLosingBet(Bet thisBet, uint numberRolled) private onlyLosingBets(numberRolled) {
         logPosition = 5552;
-        BetResulted(thisBet.playerAddress, numberRolled, 0);
-        safeSend(thisBet.playerAddress, 1);
+        BetResulted(thisBet.playerAddress, numberRolled, 0, this.balance);
+//        safeSend(thisBet.playerAddress, 1);
         investorsProfit += (thisBet.amountBetted - 1)*(10000 - houseEdge)/10000;
         uint houseProfit = (thisBet.amountBetted - 1)*(houseEdge)/10000;
         safeSend(houseAddress, houseProfit);

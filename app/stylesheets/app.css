@@ -1,8 +1,14 @@
+#debugging_info{
+    display:none;
+}
+
 body {
   margin-left: 25%;
   margin-right: 25%;
   margin-top: 10%;
   font-family: "Open Sans", sans-serif;
+  background-color: green;
+  color: white;
 }
 
 label {
@@ -11,7 +17,6 @@ label {
 }
 
 input {
-  width: 500px;
   padding: 5px;
   font-size: 16px;
 }
@@ -26,17 +31,22 @@ h1, h2 {
   vertical-align: middle;
   margin-top: 0px;
   margin-bottom: 10px;
+  color: white;
 }
 
 h2 {
-  color: #AAA;
+  color: white;
   font-size: 32px;
 }
 
 h3 {
   font-weight: normal;
-  color: #AAA;
+  color: white;
   font-size: 24px;
+}
+
+h4 {
+  color: white;
 }
 
 .black {
@@ -48,5 +58,5 @@ h3 {
 }
 
 .hint {
-  color: #666;
+  color: white;
 }

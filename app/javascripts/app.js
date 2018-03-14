@@ -178,6 +178,9 @@ window.App = {
                 if (!error) {
                     var amountWon = result.args.amountWon;
                     var numberRolled = result.args.numberRolled;
+                    var contractBalance = result.args.contractBalance;
+
+                    console.log("contractBalance after roll = "+ contractBalance.toNumber());
 
                     if (amountWon > 0) {
                         self.setStatus("Bet Won. Congrats! You rolled " + numberRolled + " and won " + amountWon);
